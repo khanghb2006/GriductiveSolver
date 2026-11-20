@@ -8,8 +8,8 @@ Mỗi người trên lưới là `CRIMINAL` (tội phạm) hoặc `INNOCENT` (v�
 
 ## Tài liệu
 
-- [docs/statement.md](statement.md) – đề bài (file PDF `AI - Project 2.pdf` là bản chính thức)
-- [docs/assignment.md](assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
+- [docs/statement.md](docs/statement.md) – đề bài (file PDF `docs/AI - Project 2.pdf` là bản chính thức)
+- [docs/assignment.md](docs/assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
 
 ## Cách hoạt động
 
@@ -54,4 +54,4 @@ python experiments/run.py           # chạy thí nghiệm -> CSV
 
 ## Nhóm
 
-Xem bảng trong [assignment.md](assignment.md) (thành viên, MSSV, % đóng góp).
+Xem bảng trong [docs/assignment.md](docs/assignment.md) (thành viên, MSSV, % đóng góp).

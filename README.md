@@ -1,57 +1,57 @@
 # Griductive Solver
 
-CSC14003 – Introduction to AI, Project 2 (HCMUS). A **no-guess** solver for the grid-deduction game Griductive, built on propositional logic, CNF encoding and a hand-written DPLL SAT solver.
+CSC14003 – Nhập môn Trí tuệ Nhân tạo, Project 2 (HCMUS). Bộ giải **không đoán mò** cho trò chơi suy luận trên lưới Griductive, xây dựng trên logic mệnh đề, mã hoá CNF và bộ giải SAT DPLL tự cài đặt.
 
-Every person on the grid is secretly `CRIMINAL` or `INNOCENT`. A verdict is accepted only if it is **logically entailed** by the clues currently revealed; a correct verdict flips a card and reveals a new clue.
+Mỗi người trên lưới là `CRIMINAL` (tội phạm) hoặc `INNOCENT` (vô tội) một cách bí mật. Một phán quyết chỉ được chấp nhận nếu nó **được suy ra logic** từ các manh mối đã được tiết lộ; phán quyết đúng sẽ lật một thẻ bài và tiết lộ manh mối mới.
 
-> **Status:** planning stage. Only the spec and task split exist so far; the code layout below is the agreed target, not what is on disk yet.
+> **Trạng thái:** đang ở giai đoạn lên kế hoạch. Hiện mới có đặc tả và phân chia công việc; cấu trúc mã bên dưới là mục tiêu đã thống nhất, chưa có trên đĩa.
 
-## Docs
+## Tài liệu
 
-- [statement.md](statement.md) – assignment text (the PDF `AI - Project 2.pdf` is authoritative)
-- [assignment.md](assignment.md) – team split, module contracts, timeline (Vietnamese)
+- [statement.md](statement.md) – đề bài (file PDF `AI - Project 2.pdf` là bản chính thức)
+- [assignment.md](assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
 
-## How it works
+## Cách hoạt động
 
-1. **Encode** – each cell *i* is a variable `C_i` (true = criminal), numbered row-major (`A1, B1, C1, A2, …` → `1..N²`). Every revealed clue becomes CNF (auxiliary vars start at `N²+1`).
-2. **Classify** – for each unsolved cell, with `KB` = revealed clues + known verdicts:
+1. **Mã hoá** – mỗi ô *i* là một biến `C_i` (true = tội phạm), đánh số theo hàng (`A1, B1, C1, A2, …` → `1..N²`). Mỗi manh mối được tiết lộ chuyển thành CNF (biến phụ bắt đầu từ `N²+1`).
+2. **Phân loại** – với mỗi ô chưa giải, đặt `KB` = các manh mối đã tiết lộ + các phán quyết đã biết:
    - `KB ∧ ¬C_i` UNSAT → `CRIMINAL`
    - `KB ∧ C_i` UNSAT → `INNOCENT`
-   - both SAT → `UNKNOWN`; `KB` UNSAT → `INCONSISTENT`
-3. **Verdict check** – `ACCEPTED`, `NOT_PROVABLE` or `CONTRADICTED`. Never guesses.
-4. **Loop** – take the first forced cell (row-major), reveal its card, update the KB, repeat until solved or stuck (ambiguous / inconsistent puzzles stop cleanly).
+   - cả hai SAT → `UNKNOWN`; `KB` UNSAT → `INCONSISTENT`
+3. **Kiểm tra phán quyết** – `ACCEPTED`, `NOT_PROVABLE` hoặc `CONTRADICTED`. Không bao giờ đoán.
+4. **Vòng lặp** – lấy ô bị buộc đầu tiên (theo thứ tự hàng), lật thẻ, cập nhật KB, lặp lại cho đến khi giải xong hoặc bế tắc (các câu đố mơ hồ / mâu thuẫn sẽ dừng một cách an toàn).
 
-Clues: `FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST` over regions `ROW | COL | NEIGHBORS | CELLS`, plus extensions `PARITY` and `COMPARE`.
+Manh mối: `FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST` trên các vùng `ROW | COL | NEIGHBORS | CELLS`, cùng các phần mở rộng `PARITY` và `COMPARE`.
 
-## Planned layout
+## Cấu trúc dự kiến
 
 ```
 main.py  README.md  requirements.txt
 griductive/
-  clues.py     clue schema, regions, semantic evaluator
-  engine.py    GameEngine (hidden solution, reveal, public_state)
-  encoder.py   clue -> CNF, build_kb
-  dpll.py      SAT solver (+ decisions/propagations/backtracks/runtime stats)
+  clues.py     schema manh mối, vùng, bộ đánh giá ngữ nghĩa
+  engine.py    GameEngine (lời giải ẩn, lật thẻ, public_state)
+  encoder.py   manh mối -> CNF, build_kb
+  dpll.py      bộ giải SAT (+ thống kê decisions/propagations/backtracks/runtime)
   agent.py     LogicAgent (classify, hint, auto_solve, uniqueness_check)
-  gui/         web or tkinter front end
-puzzles/*.json        3x3, 4x4, 5x5, plus one ambiguous and one contradictory
-experiments/run.py    runs all puzzles, writes CSV
+  gui/         giao diện web hoặc tkinter
+puzzles/*.json        3x3, 4x4, 5x5, cùng một câu mơ hồ và một câu mâu thuẫn
+experiments/run.py    chạy toàn bộ câu đố, ghi ra CSV
 tests/
 ```
 
-Rule: the agent only sees `public_state` (`{N, revealed_clues, proved}`) and never imports the engine.
+Quy tắc: agent chỉ nhìn thấy `public_state` (`{N, revealed_clues, proved}`) và không bao giờ import engine.
 
-## Usage
+## Cách dùng
 
-Fill in once `main.py` exists:
+Điền vào khi `main.py` đã có:
 
 ```bash
 pip install -r requirements.txt
-python main.py                      # launch GUI
-python -m pytest                    # tests
-python experiments/run.py           # experiments -> CSV
+python main.py                      # mở GUI
+python -m pytest                    # chạy test
+python experiments/run.py           # chạy thí nghiệm -> CSV
 ```
 
-## Team
+## Nhóm
 
-See the table in [assignment.md](assignment.md) (members, student IDs, contribution %).
+Xem bảng trong [assignment.md](assignment.md) (thành viên, MSSV, % đóng góp).

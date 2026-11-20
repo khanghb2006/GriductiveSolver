@@ -8,12 +8,12 @@ Mỗi người trên lưới là `CRIMINAL` (tội phạm) hoặc `INNOCENT` (v�
 
 ## Tài liệu
 
-- [statement.md](statement.md) – đề bài (file PDF `AI - Project 2.pdf` là bản chính thức)
-- [assignment.md](assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
+- [docs/statement.md](statement.md) – đề bài (file PDF `AI - Project 2.pdf` là bản chính thức)
+- [docs/assignment.md](assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
 
 ## Cách hoạt động
 
-1. **Mã hoá** – mỗi ô *i* là một biến `C_i` (true = tội phạm), đánh số theo hàng (`A1, B1, C1, A2, …` → `1..N²`). Mỗi manh mối được tiết lộ chuyển thành CNF (biến phụ bắt đầu từ `N²+1`).
+1. **Mã hoá** – mỗi ô _i_ là một biến `C_i` (true = tội phạm), đánh số theo hàng (`A1, B1, C1, A2, …` → `1..N²`). Mỗi manh mối được tiết lộ chuyển thành CNF (biến phụ bắt đầu từ `N²+1`).
 2. **Phân loại** – với mỗi ô chưa giải, đặt `KB` = các manh mối đã tiết lộ + các phán quyết đã biết:
    - `KB ∧ ¬C_i` UNSAT → `CRIMINAL`
    - `KB ∧ C_i` UNSAT → `INNOCENT`

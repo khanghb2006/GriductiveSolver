@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+<defs>
+ <radialGradient id="sky"><stop stop-color="#52614f"/><stop offset=".5" stop-color="#293d31"/><stop offset="1" stop-color="#0c1914"/></radialGradient>
+ <radialGradient id="glow"><stop stop-color="#d6d6b4" stop-opacity=".25"/><stop offset="1" stop-color="#b4c3a7" stop-opacity="0"/></radialGradient>
+ <linearGradient id="fog"><stop stop-color="#aec1ae" stop-opacity="0"/><stop offset=".5" stop-color="#aec1ae" stop-opacity=".2"/><stop offset="1" stop-color="#aec1ae" stop-opacity="0"/></linearGradient>
+ <symbol id="tree" viewBox="0 0 120 420"><path d="m58 0-25 100 13-5-32 95 20-6L1 293l28-6L4 367l47-7 3 60h13l-1-59 51 12-24-77 25 4-35-107 23 8-30-102 11 5z"/></symbol>
+ <symbol id="house" viewBox="0 0 140 125"><path d="m22 114-2-55 49-42 48 37 2 60" fill="#24372a" stroke="#6c7658" stroke-width="2"/><path d="m7 65 60-59 66 51m-30-23V12h12l2 34" fill="none" stroke="#8e8a60" stroke-width="3"/><path d="M36 66h16v23H36zm54-2h15v22H90z" fill="#bd9d55"/><path d="M63 113V82h17v31" fill="#101f17"/><path d="M44 66v23m-8-12h16m46-13v22m-8-11h15" stroke="#3c4029" stroke-width="2"/></symbol>
+</defs>
+<path fill="url(#sky)" d="M0 0h1600v900H0z"/>
+<ellipse cx="814" cy="155" rx="285" ry="225" fill="url(#glow)"/>
+<path d="M819 62c53 2 95 41 94 94-1 56-38 94-93 92-53-1-94-38-93-92 1-52 37-96 92-94" fill="#c5cbb1" opacity=".55"/>
+<path d="M789 69c-44 42-53 132 33 173-46-5-84-35-85-83-1-40 21-74 52-90" fill="#8fa38f" opacity=".3"/>
+<path d="M0 581q174-110 366-37t335-15q220-109 406 18t493-2v355H0z" fill="#1d3225"/>
+<path d="M0 702q304-110 533-29t499-21q324-119 568 1v247H0z" fill="#12281c"/>
+<g fill="#263d2c" opacity=".75">
+ <use href="#tree" x="20" y="195" width="140" height="520"/><use href="#tree" x="176" y="247" width="115" height="450"/><use href="#tree" x="309" y="180" width="145" height="550"/><use href="#tree" x="445" y="310" width="103" height="430"/>
+ <use href="#tree" x="541" y="357" width="80" height="345"/><use href="#tree" x="962" y="379" width="83" height="360"/><use href="#tree" x="1066" y="251" width="128" height="480"/><use href="#tree" x="1208" y="185" width="145" height="540"/><use href="#tree" x="1380" y="237" width="140" height="485"/>
+</g>
+<g opacity=".72">
+ <use href="#house" x="635" y="679" width="107" height="100"/><use href="#house" x="767" y="650" width="96" height="99"/><use href="#house" x="880" y="703" width="123" height="114"/>
+ <use href="#house" x="718" y="731" width="129" height="119"/><path d="m831 674-1-71 17-38 18 42 2 75" fill="#24372a" stroke="#727a59" stroke-width="2"/><path d="M843 615h9v17h-9" fill="#b49a59"/>
+</g>
+<g fill="#0d2117">
+ <use href="#tree" x="-44" y="52" width="180" height="800"/><use href="#tree" x="103" y="160" width="154" height="692"/><use href="#tree" x="232" y="312" width="148" height="557"/><use href="#tree" x="366" y="374" width="108" height="490"/>
+ <use href="#tree" x="1104" y="389" width="111" height="475"/><use href="#tree" x="1195" y="274" width="160" height="610"/><use href="#tree" x="1328" y="118" width="170" height="760"/><use href="#tree" x="1466" y="41" width="183" height="850"/>
+</g>
+<g fill="#081a11"><use href="#tree" x="-85" y="283" width="206" height="645"/><use href="#tree" x="41" y="480" width="152" height="495"/><use href="#tree" x="1415" y="483" width="160" height="491"/><use href="#tree" x="1528" y="231" width="196" height="700"/></g>
+<ellipse cx="820" cy="265" rx="400" ry="35" fill="url(#fog)" transform="rotate(-5 820 265)"/>
+<ellipse cx="774" cy="725" rx="730" ry="58" fill="url(#fog)"/>
+<ellipse cx="868" cy="844" rx="760" ry="53" fill="url(#fog)" opacity=".65"/>
+</svg>

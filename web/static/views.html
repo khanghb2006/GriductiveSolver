@@ -1,0 +1,48 @@
+<!-- Public UI views, loaded by app.js even when Flask has cached an older page. -->
+<div class="atmosphere" aria-hidden="true">
+  <img class="forest-scene" src="/static/scenes/gridwolf-village-night.webp" alt="">
+  <img class="gameplay-scene" src="/static/scenes/gridwolf-village-night.webp" alt="">
+  <div class="campfire-glow"></div>
+  <div class="mist mist-near"></div><div class="mist mist-far"></div>
+  <svg class="forest-watchers" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+    <defs><g id="lurker"><path d="m0 87 15-20 2-20 10-7 8-23 12 8 10-5 15 13 8 1 8 12-13 6-4 15 17 18 10 3-3 8-17-4-19-14-20 3-11 17-7 0 4-15-9 0-9 9z" fill="#050d09"/></g><path id="glance" d="m42 36 7 2-1 3-6-1zm12 1 7-2 1 3-6 2z" fill="#b83030"/></defs>
+    <g class="watcher" transform="translate(160 500) scale(1.4)"><use href="#lurker"/><g class="eyes"><use href="#glance"/></g></g>
+    <g class="watcher" transform="translate(1320 470) scale(-1.5 1.5)"><use href="#lurker"/><g class="eyes"><use href="#glance"/></g></g>
+    <g class="watcher" transform="translate(430 692) scale(.8)"><use href="#lurker"/><g class="eyes"><use href="#glance"/></g></g>
+    <g class="watcher" transform="translate(1160 730) scale(-.9 .9)"><use href="#lurker"/><g class="eyes"><use href="#glance"/></g></g>
+  </svg>
+</div>
+<header class="site-header">
+    <a class="brand" href="#home" aria-label="Gridwolf — Trang chủ"><img src="/static/logo.svg" alt=""><span>Gridwolf</span></a>
+    <div class="header-actions"><a class="room-link" href="#cases">Tạo phòng</a><a id="how-to" class="rules-link" href="#rules">Luật chơi</a></div>
+  </header>
+  <main>
+    <section id="home-screen" class="screen home" aria-labelledby="home-title" hidden>
+      <div class="home-copy"><p class="eyebrow">Ma sói · Suy luận trên lưới</p><h1 id="home-title" tabindex="-1">Gridwolf</h1><p class="opening">Đọc manh mối, suy luận từng ô để tìm ra sói trên lưới.</p><div class="home-buttons"><button id="start" class="gold">Bắt đầu</button><button id="view-rules" class="secondary">Luật chơi</button></div><button id="continue" class="continue-link" hidden>Tiếp tục ván dở</button><p id="resume-description" class="muted" hidden></p></div>
+    </section>
+    <section id="cases-screen" class="screen cases" aria-labelledby="cases-title" hidden>
+      <div class="screen-heading"><div><p class="eyebrow">CHỌN MỘT ĐÊM ĐỂ BƯỚC VÀO</p><h1 id="cases-title" tabindex="-1">Hồ sơ đêm</h1><p class="muted">Mỗi hồ sơ là một ngôi làng, mỗi lời thề là một bằng chứng.</p></div><a class="text-link" href="#home">Về trang chủ</a></div>
+      <div id="case-list" class="case-list" role="group" aria-label="Chọn hồ sơ"></div>
+      <div class="case-entry"><div><strong id="case-selection">Đang tải hồ sơ…</strong><p id="case-description" class="muted">Chọn hồ sơ rồi bấm Vào làng.</p></div><button id="load" class="gold" disabled>Vào làng</button></div>
+      <button id="back-to-game" class="quiet" hidden>Trở lại bàn hiện tại</button><p class="case-footnote">Chỉ mở lại hồ sơ khi bấm Vào làng. Quay lại danh sách không đặt lại ván.</p>
+    </section>
+    <section id="play-screen" class="screen play" aria-labelledby="map-title" hidden>
+      <nav class="game-toolbar" aria-label="Điều khiển ván"><a id="choose-case" class="text-link" href="#cases">Chọn màn</a><div class="case-heading"><h1 id="map-title" tabindex="-1"></h1><span id="progress"></span></div><div class="tools"><button id="restart">Chơi lại</button><button id="hint">Hint · Gợi ý</button><button id="auto" class="gold">Auto Solve</button><button id="stop" hidden>Dừng tự giải</button></div></nav>
+      <progress id="meter" value="0" max="9" aria-label="Tiến độ xác định dân làng"></progress>
+      <div class="workspace">
+        <section class="map-panel" aria-label="Bản đồ làng"><div class="map-meta"><span class="eyebrow">BẢN ĐỒ DƯỚI TRĂNG</span><div class="legend"><span>◇ Chưa phán</span><span class="innocent">☀ Dân làng</span><span class="criminal">◆ Sói</span></div></div>
+          <div class="board-scroll" tabindex="0" role="region" aria-label="Vùng bàn chơi, cuộn ngang nếu màn hình hẹp" aria-describedby="board-scroll-hint"><div id="board" class="board" aria-label="Bàn chơi"></div></div><p id="board-scroll-hint" class="scroll-hint" hidden>Kéo ngang trong bàn để xem đủ các cột. Bàn cũng hỗ trợ phím trái/phải khi được chọn.</p><div class="map-footer"><p class="map-note">Chọn người để phán · Chọn lời thề để soi vùng · Escape để bỏ chọn</p><button id="trace-toggle" class="trace-tab" aria-controls="trace-drawer">Nhật ký <span id="trace-count"></span></button><button id="show-summary" class="quiet" hidden>Xem tổng kết · Làng đã yên</button></div>
+          <section id="notice" class="notice" role="status" aria-live="polite" aria-atomic="true"><span id="notice-code">ĐÊM BẮT ĐẦU</span><p id="message">Mọi lời thề đều thật. Hãy phán bằng chứng cứ.</p></section>
+        </section>
+        <aside class="ledger" aria-labelledby="ledger-title"><div class="ledger-heading"><h2 id="ledger-title">Sổ lời thề</h2><button id="clear-clue" class="quiet clear" hidden>Bỏ soi</button></div><div id="clues"></div></aside>
+      </div>
+      <section id="judgment" class="judgment" role="region" aria-label="Phán quyết cho nhà được chọn" hidden>
+        <div class="judgment-heading"><div><span class="eyebrow">PHÁN QUYẾT CỦA QUẢN TRÒ</span><h2 id="selected"></h2><p id="selected-note"></p></div><button id="close-judgment" class="icon-button" aria-label="Đóng phán quyết">×</button></div>
+        <div class="verdicts"><button id="criminal">Kết tội <small>◆ SÓI</small></button><button id="innocent">Minh oan <small>☀ DÂN LÀNG</small></button></div><p id="local-feedback" class="local-feedback" role="status" aria-live="polite">Chỉ phán khi bằng chứng đã đủ.</p>
+      </section>
+    </section>
+    <p id="app-error" class="notice error" role="alert" hidden></p>
+  </main>
+  <dialog id="guide-dialog" aria-labelledby="guide-title"><div class="dialog-heading"><p class="eyebrow">Luật của làng</p><button id="close-guide" class="icon-button" aria-label="Đóng luật chơi">×</button></div><h2 id="guide-title">Đọc lời thề - Tìm sự thật</h2><ol class="instructions"><li><strong>Đọc bằng chứng:</strong> Mọi lời thề đã mở đều đúng, kể cả lời của Sói, còn tên và nghề chỉ giúp nhận diện nhân vật.</li><li><strong>Soi vùng:</strong> Bấm lời thề để làm sáng các ô được nhắc tới trên bàn, với cột ký hiệu bằng chữ, hàng bằng số và ô kề tính cả đường chéo nhưng bỏ ô trung tâm.</li><li><strong>Chọn người và phán:</strong> Chọn Kết tội cho Sói hoặc Minh oan cho Dân làng khi bằng chứng đã đủ, vì đoán đúng vẫn bị từ chối nếu chưa thể chứng minh.</li><li><strong>Mở thêm lời thề:</strong> Mỗi phán quyết hợp lệ lật thẻ và mở một manh mối mới để bạn suy luận tiếp.</li><li><strong>Dùng gợi ý:</strong> Bấm Hint để xem gợi ý cách suy luận, rồi bấm lần nữa để đánh dấu lời thề liên quan.</li><li><strong>Tự động giải:</strong> Auto Solve dùng cùng luật chứng minh để lật từng thẻ.</li></ol><p class="muted session-note">Tiến độ chỉ được giữ trong phiên server hiện tại.</p><button id="understood" class="gold">Đã hiểu</button></dialog>
+  <dialog id="trace-drawer" class="trace-drawer" aria-labelledby="trace-title"><div class="dialog-heading"><h2 id="trace-title">Nhật ký suy luận</h2><button id="close-trace" class="icon-button" aria-label="Đóng nhật ký">×</button></div><p class="muted">Các phán quyết đã được chứng minh trong ván này.</p><ol id="trace"></ol></dialog>
+  <dialog id="complete-dialog" aria-labelledby="complete-title"><div class="dialog-heading"><p class="eyebrow">MỌI LỜI THỀ ĐÃ ĐƯỢC LÀM SÁNG</p><button id="close-complete" class="icon-button" aria-label="Đóng tổng kết để xem lại bàn">×</button></div><img class="complete-bell" src="/static/logo.svg" alt=""><h2 id="complete-title">Làng đã yên</h2><p id="complete-case" class="muted"></p><div class="totals"><div class="criminal"><strong id="wolf-count"></strong><span>◆ Sói đã xác định</span></div><div class="innocent"><strong id="villager-count"></strong><span>☀ Dân làng đã xác định</span></div></div><p>Không một phán quyết nào cần đến may rủi.</p><div class="completion-actions"><button id="complete-choose" class="gold">Chọn màn khác</button><button id="complete-restart">Chơi lại</button></div><button id="review-board" class="quiet">Xem lại bàn cuối</button></dialog>

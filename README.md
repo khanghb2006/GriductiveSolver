@@ -55,3 +55,17 @@ python experiments/run.py           # chạy thí nghiệm -> CSV
 ## Nhóm
 
 Xem bảng trong [docs/assignment.md](docs/assignment.md) (thành viên, MSSV, % đóng góp).
+
+
+## Gridwolf web demo
+
+Playable Flask web app: [web/README.md](web/README.md).
+
+```powershell
+cd web
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python app.py
+```
+
+Open http://127.0.0.1:5000. The web demo includes its existing semantic agent for interactive play; it does not implement the planned CNF encoder or DPLL modules. See the web README for the public-state adapter and integration boundary.

@@ -1,8 +1,37 @@
 """Original authored case data only. Never served to the frontend or agent."""
+from random import Random
 from .logic import CRIMINAL, INNOCENT, evaluate
 
 NAMES = ['An','Bách','Chi','Đào','Giang','Hà','Khôi','Lan','Minh','Nam','Oanh','Phúc','Quỳnh','Sơn','Trâm','Vân']
-JOBS = ['Giữ đèn','Thợ rèn','Dệt vải','Gác cổng','Bào chế thuốc','Làm nến','Đào huyệt','Chép sử','Xay bột','Đốn củi','Trồng hoa','Đúc chuông','May áo','Đưa thư','Làm gốm','Hái thuốc']
+JOBS = [
+    'Nông dân',
+    'Thợ may',
+    'Thợ đóng giày',
+    'Ngư dân',
+    'Thợ dệt',
+    'Thợ rèn',
+    'Thợ mộc',
+    'Thợ làm nến',
+    'Thợ xây',
+    'Thợ làm bánh',
+    'Thương nhân',
+    'Đầu bếp',
+    'Chủ quán rượu',
+    'Người đưa thư',
+    'Người chăn cừu',
+    'Thợ mỏ',
+    'Người làm vườn',
+    'Thợ đóng thuyền',
+    'Lính gác',
+    'Thầy thuốc',
+    'Người đánh xe ngựa',
+    'Chủ nhà trọ',
+    'Người lái đò',
+    'Người nấu rượu',
+    'Thợ làm gốm',
+    'Tiều phu',
+    'Nhà giả kim',
+]
 
 
 # Small constructors serialize the existing schema; no additional clue language.
@@ -39,8 +68,10 @@ def neighbors(cell):
 
 
 def case(pid,title,size,names,jobs,labels,authored,initial):
+    display_names = list(names[:size*size])
+    Random(pid).shuffle(display_names)
     layout=[dict(id=f'{chr(65+i%size)}{i//size+1}',row=i//size+1,column=i%size+1,
-                 name=name,profession=jobs[i]) for i,name in enumerate(names[:size*size])]
+                 name=name,profession=jobs[i]) for i,name in enumerate(display_names)]
     solution={p['id']:value for p,value in zip(layout,labels)}
     clues={owner:dict(id='clue-'+owner,owner=owner,**clue) for owner,clue in authored.items()}
     assert len(layout)==size*size and set(clues)==set(solution)
@@ -87,7 +118,7 @@ def north_gate():
 
 
 RED_NAMES=['An','Ân','Bách','Bình','Chi','Dũng','Đào','Đức','Giang','Hà','Hạnh','Huy','Khôi','Lan','Linh','Minh','Nam','Oanh','Phúc','Quỳnh','Sơn','Trâm','Vân','Xuân','Yên']
-RED_JOBS=['Giữ đèn','Thợ rèn','Dệt vải','Gác cổng','Làm nến','Đúc chuông','Hái thuốc','Chép sử','Làm gốm','Xay bột','May áo','Đốn củi','Đào huyệt','Đưa thư','Trồng hoa','Nấu rượu','Đan giỏ','Làm bánh','Nhuộm vải','Chăn dê','Đánh cá','Khắc gỗ','Bán muối','Trồng trà','Bốc thuốc']
+RED_JOBS = JOBS[2:] + JOBS[:2]
 
 
 def red_moon_puzzle():
@@ -123,7 +154,7 @@ def red_moon_puzzle():
 
 def mist_wharf_puzzle():
     names=['Ánh','Bảo','Cẩm','Dạ','Đan','Đông','Hiền','Hòa','Khanh','Liên','Lộc','Mai','Ngân','Nhi','Nhung','Phong','Quân','Thảo','Thi','Thu','Tiên','Tú','Uyên','Vi','Vũ']
-    jobs=['Giữ bến','Đan lưới','Làm bánh','Hái trà','Gác đèn','Lái đò','Trồng sen','May áo','Đốn củi','Làm nến','Đánh cá','Nấu rượu','Hái thuốc','Dệt vải','Bán muối','Thợ rèn','Khắc gỗ','Làm gốm','Đan giỏ','Chép sử','Trồng hoa','Xay bột','Nhuộm vải','Đưa thư','Giữ kho']
+    jobs = JOBS[9:] + JOBS[:9]
     return case('village-5-mist','Bến sương mù',5,names,jobs,
         [False,True,True,False,True,False,True,False,False,True,True,False,False,True,False,True,False,True,False,True,False,True,False,True,False],{
         'A1':count('AT_MOST',0,cells('A2','C2','D2')),

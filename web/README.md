@@ -77,15 +77,15 @@ Không cần thay route hoặc frontend. Để thử riêng engine: `GameEngine(
 ```json
 {
   "layout": [
-    {"id":"A1","row":1,"column":1,"name":"Giang","profession":"Nông dân"},
-    {"id":"B1","row":1,"column":2,"name":"Hà","profession":"Thợ may"},
-    {"id":"C1","row":1,"column":3,"name":"Bách","profession":"Thợ đóng giày"},
-    {"id":"A2","row":2,"column":1,"name":"Chi","profession":"Ngư dân"},
-    {"id":"B2","row":2,"column":2,"name":"Lan","profession":"Thợ dệt"},
-    {"id":"C2","row":2,"column":3,"name":"Minh","profession":"Thợ rèn"},
-    {"id":"A3","row":3,"column":1,"name":"Đào","profession":"Thợ mộc"},
-    {"id":"B3","row":3,"column":2,"name":"An","profession":"Thợ làm nến"},
-    {"id":"C3","row":3,"column":3,"name":"Khôi","profession":"Thợ xây"}
+    {"id":"A1","row":1,"column":1,"name":"An","profession":"Nông dân"},
+    {"id":"B1","row":1,"column":2,"name":"Bách","profession":"Thợ may"},
+    {"id":"C1","row":1,"column":3,"name":"Chi","profession":"Thợ đóng giày"},
+    {"id":"A2","row":2,"column":1,"name":"Đào","profession":"Ngư dân"},
+    {"id":"B2","row":2,"column":2,"name":"Giang","profession":"Thợ dệt"},
+    {"id":"C2","row":2,"column":3,"name":"Hà","profession":"Thợ rèn"},
+    {"id":"A3","row":3,"column":1,"name":"Khôi","profession":"Thợ mộc"},
+    {"id":"B3","row":3,"column":2,"name":"Lan","profession":"Thợ làm nến"},
+    {"id":"C3","row":3,"column":3,"name":"Minh","profession":"Thợ xây"}
   ],
   "known": {"A1":"INNOCENT","A2":"CRIMINAL"},
   "clues": [
@@ -188,6 +188,8 @@ Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server ki
 Cảnh nền gốc Gridwolf: `static/scenes/gridwolf-village-night.webp`, tạo bằng **built-in image_gen**, khoảng 206 KB. Hiển thị toàn cảnh ở Trang chủ, crop và phủ xanh đen trong gameplay. Người và sói trong tranh không liên hệ với cell/đáp án. Prompt cuối, chế độ tạo và xuất xứ được ghi nguyên văn trong [ASSET_NOTES.md](static/scenes/ASSET_NOTES.md). Không dùng screenshot, logo hoặc asset Agrou.
 
 Tham khảo cách đọc nhóm/ngân sách từ [Griductive Strategy](https://knotwise.games/games/griductive/strategy) và cách hiểu hàng/cột/ô kề từ [How to Play](https://knotwise.games/games/griductive/how-to-play). Các nhân vật, clue, lời giải và cảnh Gridwolf được soạn riêng. Chưa tích hợp thuật toán CNF/DPLL của nhóm; phần demo hiện tại dùng đúng adapter đã có, không tuyên bố hoàn thành các mục thuật toán của toàn Project 2.
+
+Nhân vật được xếp theo thứ tự tên ABC của dữ liệu màn, từ trái sang phải rồi từ trên xuống dưới; không trộn tên khi tải hoặc chơi lại.
 
 ## Danh sách nghề
 

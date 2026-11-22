@@ -1,5 +1,4 @@
 """Original authored case data only. Never served to the frontend or agent."""
-from random import Random
 from .logic import CRIMINAL, INNOCENT, evaluate
 
 NAMES = ['An','Bách','Chi','Đào','Giang','Hà','Khôi','Lan','Minh','Nam','Oanh','Phúc','Quỳnh','Sơn','Trâm','Vân']
@@ -68,10 +67,8 @@ def neighbors(cell):
 
 
 def case(pid,title,size,names,jobs,labels,authored,initial):
-    display_names = list(names[:size*size])
-    Random(pid).shuffle(display_names)
     layout=[dict(id=f'{chr(65+i%size)}{i//size+1}',row=i//size+1,column=i%size+1,
-                 name=name,profession=jobs[i]) for i,name in enumerate(display_names)]
+                 name=name,profession=jobs[i]) for i,name in enumerate(names[:size*size])]
     solution={p['id']:value for p,value in zip(layout,labels)}
     clues={owner:dict(id='clue-'+owner,owner=owner,**clue) for owner,clue in authored.items()}
     assert len(layout)==size*size and set(clues)==set(solution)

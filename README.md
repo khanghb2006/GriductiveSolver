@@ -1,6 +1,13 @@
-# Gridwolf — bàn giao phạm vi 4.1
+# Griductive Solver
 
-Web game Ma Sói suy luận trên lưới, Python/Flask + HTML/CSS/JavaScript thuần. Đối chiếu **AI - Project 2.pdf, trang 5, mục 4.1 Reimplement the Game**. Công việc ở đây là giao diện, Game Engine, dữ liệu màn và điểm tích hợp thuật toán. Không bổ sung ngôn ngữ clue, CNF encoder, DPLL, solver mới, benchmark hay báo cáo cho các mục 4.2 trở đi.
+CSC14003 – Nhập môn Trí tuệ Nhân tạo, Project 2 (HCMUS). Bộ giải **không đoán mò** cho trò chơi suy luận trên lưới Griductive, xây dựng trên logic mệnh đề, mã hoá CNF và bộ giải SAT DPLL tự cài đặt.
+
+Mỗi người trên lưới là `CRIMINAL` (tội phạm) hoặc `INNOCENT` (vô tội) một cách bí mật. Một phán quyết chỉ được chấp nhận nếu nó **được suy ra logic** từ các manh mối đã được tiết lộ; phán quyết đúng sẽ lật một thẻ bài và tiết lộ manh mối mới.
+
+## Tài liệu
+
+- [docs/statement.md](docs/statement.md) – đề bài (file PDF `docs/AI - Project 2.pdf` là bản chính thức)
+- [docs/assignment.md](docs/assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
 
 ## Chạy web
 
@@ -14,19 +21,17 @@ python -m venv .venv
 
 Mở **http://127.0.0.1:5000**. Nếu `.venv` đã cài, chỉ cần lệnh cuối. Ctrl+C để dừng. Khi sửa file Python/dữ liệu màn, cần khởi động lại server. Khi chỉ sửa UI, Ctrl+F5 là đủ.
 
-Mỗi cookie phiên trỏ tới một ván ở RAM server; không có database hay lưu ván qua lần restart tiến trình. Điều hướng Trang chủ → Chọn màn → Chơi không tự reset ván. Tiếp tục chỉ hiện khi trạng thái server có lịch sử và ván chưa hoàn tất. Chỉ Load/Vào làng hoặc Restart/Chơi lại mới đặt lại ván.
-
 ## File chính và ranh giới dữ liệu
 
-| File | Trách nhiệm |
-| --- | --- |
-| `app.py` | Flask/API, phiên chơi, `create_app(agent_factory=...)` để đăng ký implementation của nhóm. |
-| `game/engine.py` | `GameEngine`: puzzle đầy đủ, vai bí mật, clue úp; Load, Restart, kiểm verdict và lật thẻ. |
-| `game/puzzles.py` | Bốn hồ sơ soạn tay, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough. |
-| `game/logic.py` | Interface `LogicAgent`, `Inference`, semantic evaluator và implementation demo **đã có trước** `ExhaustiveAgent`. Được giữ và dùng lại, không viết lại thuật toán trong đợt 4.1 này. |
-| `static/views.html`, `static/app.js`, `static/style.css` | Routing hash, render, tương tác, spotlight và responsive. Không chứa đáp án hay clue úp. |
-| `static/scenes/gridwolf-village-night.webp` | Cảnh Gridwolf riêng, không lấy asset/nhân vật/logo của Agrou. |
-| `tests/test_authored_cases.py` | Dùng agent hiện có để kiểm hai clue cần thiết và không có shortcut từ clue đơn lẻ. |
+| File                                                     | Trách nhiệm                                                                                                                                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app.py`                                                 | Flask/API, phiên chơi, `create_app(agent_factory=...)` để đăng ký implementation của nhóm.                                                                                           |
+| `game/engine.py`                                         | `GameEngine`: puzzle đầy đủ, vai bí mật, clue úp; Load, Restart, kiểm verdict và lật thẻ.                                                                                            |
+| `game/puzzles.py`                                        | Bốn hồ sơ soạn tay, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough.                                                          |
+| `game/logic.py`                                          | Interface `LogicAgent`, `Inference`, semantic evaluator và implementation demo **đã có trước** `ExhaustiveAgent`. Được giữ và dùng lại, không viết lại thuật toán trong đợt 4.1 này. |
+| `static/views.html`, `static/app.js`, `static/style.css` | Routing hash, render, tương tác, spotlight và responsive. Không chứa đáp án hay clue úp.                                                                                             |
+| `static/scenes/gridwolf-village-night.webp`              | Cảnh Gridwolf riêng, không lấy asset/nhân vật/logo của Agrou.                                                                                                                        |
+| `tests/test_authored_cases.py`                           | Dùng agent hiện có để kiểm hai clue cần thiết và không có shortcut từ clue đơn lẻ.                                                                                                   |
 
 `GameEngine.knowledge()` trả **bản sao** chỉ gồm `{layout, known, clues}` cho agent. `GameEngine.view()` trả DTO cho frontend gồm layout công khai, known, clue đã mở (cấu trúc + text + cells đã giải vùng), tiến độ, completed và history. Không trả `solution`, `initial` hay clue của người còn úp. Tên và nghề không tự mang ý nghĩa logic.
 
@@ -54,11 +59,11 @@ class Inference:
 
 ### Ba hook dùng cùng adapter
 
-| Hook chính xác | Input | Output / hành vi |
-| --- | --- | --- |
-| `game/engine.py:GameEngine.verdict(cell, status)` | ID và enum từ UI; engine lấy `knowledge()` rồi gọi `agent.classify(public_state)` | ACCEPTED chỉ khi forced và khớp dữ liệu màn; sau đó cập nhật known, history và mở clue. UNKNOWN → NOT_PROVABLE; nhãn ngược forced → CONTRADICTED. |
-| `game/engine.py:GameEngine.hint()` | `knowledge()` tại lượt hiện tại | Dùng `agent.classify()` và `game/logic.py:proof_support()` để chọn clue thực sự hỗ trợ một suy luận; ưu tiên nhóm đếm chồng nhau. Lần đầu gợi cách đọc; lần sau trả `clue_ids` đã mở. Không trả ô đích hoặc verdict cho UI. |
-| `game/engine.py:GameEngine.auto_step()` | `knowledge()` tại lượt hiện tại | Chọn ô forced theo thứ tự hàng/cột, gọi lại `verdict()`; clue mới chỉ mở qua engine. Mỗi lần gọi chỉ thực hiện một bước. Frontend chờ khoảng một giây rồi gọi tiếp. |
+| Hook chính xác                                    | Input                                                                             | Output / hành vi                                                                                                                                                                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `game/engine.py:GameEngine.verdict(cell, status)` | ID và enum từ UI; engine lấy `knowledge()` rồi gọi `agent.classify(public_state)` | ACCEPTED chỉ khi forced và khớp dữ liệu màn; sau đó cập nhật known, history và mở clue. UNKNOWN → NOT_PROVABLE; nhãn ngược forced → CONTRADICTED.                                                                           |
+| `game/engine.py:GameEngine.hint()`                | `knowledge()` tại lượt hiện tại                                                   | Dùng `agent.classify()` và `game/logic.py:proof_support()` để chọn clue thực sự hỗ trợ một suy luận; ưu tiên nhóm đếm chồng nhau. Lần đầu gợi cách đọc; lần sau trả `clue_ids` đã mở. Không trả ô đích hoặc verdict cho UI. |
+| `game/engine.py:GameEngine.auto_step()`           | `knowledge()` tại lượt hiện tại                                                   | Chọn ô forced theo thứ tự hàng/cột, gọi lại `verdict()`; clue mới chỉ mở qua engine. Mỗi lần gọi chỉ thực hiện một bước. Frontend chờ khoảng một giây rồi gọi tiếp.                                                         |
 
 **Đăng ký:** `app.py:create_app(agent_factory=None)` nhận callable tạo một instance adapter cho mỗi ván/phiên mới. Mặc định `None` giữ implementation demo hiện có. Khi module của nhóm sẵn sàng, trong runner của nhóm:
 
@@ -77,20 +82,86 @@ Không cần thay route hoặc frontend. Để thử riêng engine: `GameEngine(
 ```json
 {
   "layout": [
-    {"id":"A1","row":1,"column":1,"name":"An","profession":"Nông dân"},
-    {"id":"B1","row":1,"column":2,"name":"Bách","profession":"Thợ may"},
-    {"id":"C1","row":1,"column":3,"name":"Chi","profession":"Thợ đóng giày"},
-    {"id":"A2","row":2,"column":1,"name":"Đào","profession":"Ngư dân"},
-    {"id":"B2","row":2,"column":2,"name":"Giang","profession":"Thợ dệt"},
-    {"id":"C2","row":2,"column":3,"name":"Hà","profession":"Thợ rèn"},
-    {"id":"A3","row":3,"column":1,"name":"Khôi","profession":"Thợ mộc"},
-    {"id":"B3","row":3,"column":2,"name":"Lan","profession":"Thợ làm nến"},
-    {"id":"C3","row":3,"column":3,"name":"Minh","profession":"Thợ xây"}
+    {
+      "id": "A1",
+      "row": 1,
+      "column": 1,
+      "name": "An",
+      "profession": "Nông dân"
+    },
+    {
+      "id": "B1",
+      "row": 1,
+      "column": 2,
+      "name": "Bách",
+      "profession": "Thợ may"
+    },
+    {
+      "id": "C1",
+      "row": 1,
+      "column": 3,
+      "name": "Chi",
+      "profession": "Thợ đóng giày"
+    },
+    {
+      "id": "A2",
+      "row": 2,
+      "column": 1,
+      "name": "Đào",
+      "profession": "Ngư dân"
+    },
+    {
+      "id": "B2",
+      "row": 2,
+      "column": 2,
+      "name": "Giang",
+      "profession": "Thợ dệt"
+    },
+    {
+      "id": "C2",
+      "row": 2,
+      "column": 3,
+      "name": "Hà",
+      "profession": "Thợ rèn"
+    },
+    {
+      "id": "A3",
+      "row": 3,
+      "column": 1,
+      "name": "Khôi",
+      "profession": "Thợ mộc"
+    },
+    {
+      "id": "B3",
+      "row": 3,
+      "column": 2,
+      "name": "Lan",
+      "profession": "Thợ làm nến"
+    },
+    {
+      "id": "C3",
+      "row": 3,
+      "column": 3,
+      "name": "Minh",
+      "profession": "Thợ xây"
+    }
   ],
-  "known": {"A1":"INNOCENT","A2":"CRIMINAL"},
+  "known": { "A1": "INNOCENT", "A2": "CRIMINAL" },
   "clues": [
-    {"id":"clue-A1","owner":"A1","type":"FACT","cells":["C1"],"status":"INNOCENT"},
-    {"id":"clue-A2","owner":"A2","type":"EXACTLY","k":1,"region":{"kind":"LIST","cells":["B1","B2"]}}
+    {
+      "id": "clue-A1",
+      "owner": "A1",
+      "type": "FACT",
+      "cells": ["C1"],
+      "status": "INNOCENT"
+    },
+    {
+      "id": "clue-A2",
+      "owner": "A2",
+      "type": "EXACTLY",
+      "k": 1,
+      "region": { "kind": "LIST", "cells": ["B1", "B2"] }
+    }
   ]
 }
 ```
@@ -115,25 +186,25 @@ Ví dụ output từng hook trên trạng thái này:
 
 GET `/api/puzzles`, GET `/api/state`. POST nhận JSON:
 
-| Endpoint POST | JSON body |
-| --- | --- |
-| `/api/load` | `{"puzzle_id":"village-5"}` |
-| `/api/verdict` | `{"cell":"C1","status":"INNOCENT"}` |
-| `/api/restart`, `/api/hint`, `/api/auto-step` | `{}` |
+| Endpoint POST                                 | JSON body                           |
+| --------------------------------------------- | ----------------------------------- |
+| `/api/load`                                   | `{"puzzle_id":"village-5"}`         |
+| `/api/verdict`                                | `{"cell":"C1","status":"INNOCENT"}` |
+| `/api/restart`, `/api/hint`, `/api/auto-step` | `{}`                                |
 
 Response thao tác có `code`, `message`, `state`; Hint thêm `level`, `clue_ids` khi có gợi ý. API giữ nguyên mã:
 
-| Code | Ý nghĩa |
-| --- | --- |
-| ACCEPTED | Verdict được chứng minh và đúng, lật thẻ. |
-| NOT_PROVABLE | Cả hai vai còn khả thi; không lật. |
-| CONTRADICTED | Bằng chứng bắt buộc vai ngược lại; không lật. |
-| DATA_ERROR | Dữ kiện công khai mâu thuẫn hoặc lệch dữ liệu màn; giữ bàn. |
-| ALREADY_REVEALED | Ô đã mở, không thêm bước. |
-| INVALID_REQUEST | Input/route không hợp lệ. |
-| LOADED / RESTARTED | Đã đặt lại đúng các thẻ mở sẵn. |
-| HINT / NO_HINT | Gợi phương pháp/clue, hoặc không còn suy luận mới. |
-| STUCK / COMPLETE | Auto Solve hết nước chứng minh được / đã hoàn tất. |
+| Code               | Ý nghĩa                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| ACCEPTED           | Verdict được chứng minh và đúng, lật thẻ.                   |
+| NOT_PROVABLE       | Cả hai vai còn khả thi; không lật.                          |
+| CONTRADICTED       | Bằng chứng bắt buộc vai ngược lại; không lật.               |
+| DATA_ERROR         | Dữ kiện công khai mâu thuẫn hoặc lệch dữ liệu màn; giữ bàn. |
+| ALREADY_REVEALED   | Ô đã mở, không thêm bước.                                   |
+| INVALID_REQUEST    | Input/route không hợp lệ.                                   |
+| LOADED / RESTARTED | Đã đặt lại đúng các thẻ mở sẵn.                             |
+| HINT / NO_HINT     | Gợi phương pháp/clue, hoặc không còn suy luận mới.          |
+| STUCK / COMPLETE   | Auto Solve hết nước chứng minh được / đã hoàn tất.          |
 
 Các kết quả nghiệp vụ trả HTTP 200 với code. JSON/type sai hoặc ID màn sai trả 400, route action không tồn tại trả 404; request cross-site bị chặn bằng 403. CONNECTION_ERROR chỉ là thông báo lỗi kết nối phía UI, không phải nhãn suy luận của backend.
 
@@ -173,15 +244,15 @@ Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server ki
 
 ## Đối chiếu 4.1
 
-| Dòng yêu cầu | Implementation / kiểm chứng |
-| --- | --- |
-| GUI, lưới, tọa độ, tên/nghề, vai biết, clue mở, thẻ úp | Web/Gridwolf; layout public, icon ba trạng thái; kiểm desktop/mobile. |
-| Gọi CRIMINAL hoặc INNOCENT | Kết tội/Minh oan; giữ enum trong API. |
-| Verdict proved + correct → mở và hiện clue | `GameEngine.verdict`, chung luồng chơi tay/Auto Solve; trace chỉ có nước đã chấp nhận. |
-| Hai dạng từ chối không lộ clue | NOT_PROVABLE và CONTRADICTED riêng; so state trước/sau trong test. |
-| Chọn clue, highlight đúng vùng | `paintSpotlight()` lấy public `cells`; bạc xám sáng, nhãn vai riêng, nút Bỏ soi/Esc/bấm lại. |
-| Load / Restart / Hint / Auto Solve | API thật; Hint/Auto Solve đang dùng implementation có sẵn, factory cho nhóm thay adapter. |
-| Engine giữ bí mật; agent chỉ nhận public knowledge | `knowledge()`/`view()` có ranh giới rõ; test adapter factory và response. |
+| Dòng yêu cầu                                           | Implementation / kiểm chứng                                                                  |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| GUI, lưới, tọa độ, tên/nghề, vai biết, clue mở, thẻ úp | Web/Gridwolf; layout public, icon ba trạng thái; kiểm desktop/mobile.                        |
+| Gọi CRIMINAL hoặc INNOCENT                             | Kết tội/Minh oan; giữ enum trong API.                                                        |
+| Verdict proved + correct → mở và hiện clue             | `GameEngine.verdict`, chung luồng chơi tay/Auto Solve; trace chỉ có nước đã chấp nhận.       |
+| Hai dạng từ chối không lộ clue                         | NOT_PROVABLE và CONTRADICTED riêng; so state trước/sau trong test.                           |
+| Chọn clue, highlight đúng vùng                         | `paintSpotlight()` lấy public `cells`; bạc xám sáng, nhãn vai riêng, nút Bỏ soi/Esc/bấm lại. |
+| Load / Restart / Hint / Auto Solve                     | API thật; Hint/Auto Solve đang dùng implementation có sẵn, factory cho nhóm thay adapter.    |
+| Engine giữ bí mật; agent chỉ nhận public knowledge     | `knowledge()`/`view()` có ranh giới rõ; test adapter factory và response.                    |
 
 ## Ảnh nền và nguồn tham khảo
 

@@ -7,6 +7,13 @@ from .logic import CRIMINAL, INNOCENT, UNKNOWN , Inference , proof_support
 ACCEPTED , NOT_PROVABLE = 'ACCEPTED' , 'NOT_PROVABLE'
 CONTRADICTED , INCONSISTENT =  'CONTRADICTED' , 'INCONSISTENT'
 FORCED , STUCK = 'FORCED' , 'STUCK'
+UNIQUE , MULTIPLE , NO_SOLUTION = 'UNIQUE' , 'MULTIPLE' , 'NO_SOLUTION'
+
+
+def _value(model , var):
+    # Value of variable var in a model given
+    return model[var] if isinstance(model , dict) else model[var - 1]
+
 
 class SatAgent:
     def __init__(self, build_kb , solve):
@@ -98,4 +105,22 @@ class SatAgent:
                               clue_ids = found['clues_ids'] ,
                               sat_queries = len(found['queries']) , 
                               revealed = revealed))
+            
+    
+    def unique_check(self , all_clues , n):
+        layout = [dict(id = f'{chr(65 + col)}{row}' , row = row , column = col + 1)
+                  for row in range(1 , n + 1) for col in range(n)]
+        
+        kb = self.build_kb(dict(layout = layout , known = {} , clues = list(all_clues)))
+        n_vars = kb.n_primary + kb.n_aux
+        
+        first = self.solve(kb.clauses , n_vars , ())
+        
+        if not first.sat:
+            return NO_SOLUTION
+        
+        # Forbit exactly this solution
+        block = [-v if _value(first.model , v) else v for v in range(1 , kb.n_primary + 1)]
+        again = self.solve(kb.clauses + [block] , n_vars , ())
+        return MULTIPLE if again.sat else UNIQUE
             

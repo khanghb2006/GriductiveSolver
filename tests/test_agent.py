@@ -4,7 +4,7 @@ from itertools import product
 from game.agent import SatAgent
 
 KB = namedtuple('KB', 'clauses n_primary n_aux')
-Result = namedtuple('Result' , 'sat')
+Result = namedtuple('Result', 'sat model', defaults=[None])
 
 def build_kb(state):
      return KB([[1, 2], [-1, 2]], 2, 0)
@@ -13,7 +13,7 @@ def solve(clauses , n_vars , assumptions):
     for bits in product([False , True] , repeat = n_vars):
         holds = lambda l: bits[abs(l) - 1] == (l > 0)
         if all(holds(a) for a in assumptions) and all(any(holds(l) for l in c) for c in clauses):
-            return Result(True)
+            return Result(True, {i + 1: b for i, b in enumerate(bits)})
     return Result(False)
     
 def test_classify_example():
@@ -84,3 +84,10 @@ def test_auto_solve_inconsistent():
 def test_check_verdict_inconsistent():
     state = FakeEngine().knowledge()
     assert SatAgent(CONTRADICTION, solve).check_verdict(state, 'A', 'CRIMINAL') == 'INCONSISTENT'
+
+def test_unique_check():
+    agent = lambda clauses: SatAgent(kb_of(clauses) , solve)
+    
+    assert agent([[1] , [-2]]).unique_check([] , 2) == 'UNIQUE'
+    assert agent([[1 , 2] , [-1 , 2]]).unique_check([] , 2) == 'MULTIPLE'
+    assert agent([[1] , [-1]]).unique_check([] , 2) == 'NO_SOLUTION'

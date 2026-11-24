@@ -23,7 +23,7 @@ Phần dưới mô tả mục tiêu tích hợp của nhóm. Bản web hiện d�
 3. **Kiểm tra phán quyết** – `ACCEPTED`, `NOT_PROVABLE` hoặc `CONTRADICTED`. Không bao giờ đoán.
 4. **Vòng lặp** – lấy ô bị buộc đầu tiên (theo thứ tự hàng), lật thẻ, cập nhật KB, lặp lại cho đến khi giải xong hoặc bế tắc (các câu đố mơ hồ / mâu thuẫn sẽ dừng một cách an toàn).
 
-Manh mối: `FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST` trên các vùng `ROW | COL | NEIGHBORS | CELLS`, cùng các phần mở rộng `PARITY` và `COMPARE`.
+Manh mối cốt lõi: `FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST`. Bản web hiện thêm `COMPARE` (so sánh số Sói/Dân quanh hai ô) và `CONTIGUOUS` (một vai nằm liền nhau trên hàng); xem schema trong [web/README.md](web/README.md). `PARITY` trong kế hoạch ban đầu chưa triển khai.
 
 ## Cấu trúc hiện tại
 
@@ -35,7 +35,7 @@ web/
   game/
     engine.py            GameEngine, trạng thái ẩn và lật thẻ
     logic.py             Interface agent, evaluator, agent demo
-    puzzles.py           Bốn màn 3×3, 4×4, 5×5
+    puzzles.py           Sáu màn: hai màn mỗi kích thước 3×3, 4×4, 5×5
   static/                JavaScript, CSS, các view và hình ảnh
   templates/index.html   Trang khởi động
   tests/                 Kiểm thử game và giao diện

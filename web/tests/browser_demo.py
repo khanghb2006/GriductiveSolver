@@ -10,6 +10,55 @@ from game.logic import ExhaustiveAgent,CRIMINAL,INNOCENT,UNKNOWN
 from game.puzzles import DEMO_PROOFS
 
 
+def check_extension_cases(page, base):
+    """Exercise the two extension cases using the existing browser session."""
+    page.set_viewport_size({"width":1366,"height":768})
+    page.goto(base + '/#cases')
+    expect(page.locator('#cases-screen')).to_be_visible()
+    catalog = page.request.get(base + '/api/puzzles').json()
+    assert len(catalog) == 6
+    for pid,target,status in [('village-3-links','B2','CRIMINAL'),
+                              ('village-4-links','C3','INNOCENT')]:
+        if not page.locator('#cases-screen').is_visible():
+            page.locator('#choose-case').click()
+        page.locator(f'[data-puzzle="{pid}"]').click()
+        page.locator('#load').click()
+        expect(page.locator('#notice-code')).to_have_text('LOADED')
+        state = page.request.get(base + '/api/state').json()
+        assert len(state['clues']) == 2
+        for clue in state['clues']:
+            entry = page.locator(f'[data-clue="{clue["id"]}"]')
+            expect(entry).to_contain_text('xung quanh' if clue['type'] == 'COMPARE' else 'nằm liền nhau')
+            entry.click()
+            highlighted = page.locator('.card.highlight').evaluate_all('(es)=>es.map(e=>e.dataset.cell)')
+            assert set(highlighted) == set(clue['cells'])
+        page.locator('#clear-clue').click()
+        expect(page.locator('.highlight')).to_have_count(0)
+        page.locator('#hint').click()
+        expect(page.locator('#hint')).to_be_enabled()
+        page.locator('#hint').click()
+        expect(page.locator('.testimony.hinted')).to_have_count(2)
+        page.locator(f'[data-cell="{target}"]').click()
+        right = '#criminal' if status == 'CRIMINAL' else '#innocent'
+        wrong = '#innocent' if status == 'CRIMINAL' else '#criminal'
+        page.locator(wrong).click()
+        expect(page.locator('#notice-code')).to_have_text('CONTRADICTED')
+        expect(page.locator('.revealed')).to_have_count(2)
+        page.locator(right).click()
+        expect(page.locator('.revealed')).to_have_count(3)
+        page.screenshot(path=f'/tmp/{pid}-desktop.png', full_page=True)
+        page.locator('#auto').click()
+        expect(page.locator('#complete-dialog')).to_be_visible(timeout=30000)
+        expect(page.locator('.revealed')).to_have_count(state['total'])
+        page.locator('#complete-restart').click()
+        expect(page.locator('.revealed')).to_have_count(2)
+        page.set_viewport_size({'width':390,'height':844})
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        page.screenshot(path=f'/tmp/{pid}-mobile.png', full_page=True)
+        page.set_viewport_size({'width':1366,'height':768})
+        print(f'PASS {pid}: select, prose, exact highlight, hint, manual proof, auto solve, restart, mobile', flush=True)
+
+
 def run(base_url='http://127.0.0.1:5000'):
     Path('tmp/qa').mkdir(parents=True,exist_ok=True)
     with sync_playwright() as p:
@@ -124,8 +173,9 @@ def run(base_url='http://127.0.0.1:5000'):
         page.emulate_media(reduced_motion='reduce')
         page.locator('[data-clue="clue-A1"]').click()
         assert page.locator('.card.highlight').first.evaluate('(e)=>getComputedStyle(e).transitionDuration')=='0s'
+        check_extension_cases(page, base_url)
         assert not errors,errors
-        print(f'Browser PASS: four original cases, manual proof checkpoints, real Verdict/Hint/Auto Solve, exact bright spotlight, flat ledger, restart/navigation, mobile/reduced motion; {len(public_responses)} public responses; no JS errors.')
+        print(f'Browser PASS: four original cases and two extension cases, manual proof checkpoints, real Verdict/Hint/Auto Solve, exact bright spotlight, flat ledger, restart/navigation, mobile/reduced motion; {len(public_responses)} public responses; no JS errors.')
         browser.close()
 
 

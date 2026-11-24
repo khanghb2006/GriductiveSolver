@@ -7,7 +7,7 @@ from time import perf_counter
 from app import create_app
 from game.engine import GameEngine
 from game.logic import ExhaustiveAgent, CRIMINAL, INNOCENT, UNKNOWN, evaluate
-from game.puzzles import PUZZLES
+from game.puzzles import PUZZLES, compare, contiguous
 
 
 def brute_force(state):
@@ -121,3 +121,21 @@ def test_red_moon_api_playthrough_privacy_and_timings():
     Path('tmp/qa').mkdir(parents=True,exist_ok=True)
     Path('tmp/qa/gridwolf-5x5-timings.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
     assert all(max(v) < 2000 for v in metrics.values()), summary
+
+
+def test_extension_agent_matches_brute_force_for_partial_mixed_constraints():
+    rng = Random(2411)
+    layout = PUZZLES['village-3']['layout']
+    ids = [p['id'] for p in layout]
+    roles = [CRIMINAL, INNOCENT]
+    for _ in range(70):
+        a, b = rng.sample(ids, 2)
+        clues = [compare(a, rng.choice(roles), b, rng.choice(roles)),
+                 contiguous(rng.randrange(1,4), rng.choice(roles))]
+        if rng.getrandbits(1):
+            clues.append(dict(type='EXACTLY', k=rng.randrange(4), region=dict(kind='ROW',row=1)))
+        state = dict(layout=layout, clues=clues,
+                     known={c:rng.choice(roles) for c in rng.sample(ids,rng.randrange(4))})
+        count, statuses = brute_force(state)
+        actual = ExhaustiveAgent().classify(state)
+        assert (actual.model_count, actual.statuses) == (count, statuses)

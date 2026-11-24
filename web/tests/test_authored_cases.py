@@ -1,12 +1,13 @@
 """4.1 data validation using the already integrated agent, not a new solver."""
 import pytest
 from game.engine import GameEngine
-from game.logic import UNKNOWN,CRIMINAL,INNOCENT,Inference
+from game.logic import UNKNOWN,CRIMINAL,INNOCENT,Inference,ExhaustiveAgent
 from game.puzzles import PUZZLES,DEMO_PROOFS
 from app import create_app
+from test_gridwolf import brute_force
 
 
-@pytest.mark.parametrize('pid',PUZZLES)
+@pytest.mark.parametrize('pid',DEMO_PROOFS)
 def test_planned_combination_has_no_single_clue_shortcut(pid):
     g=GameEngine(pid)
     proof=DEMO_PROOFS[pid]
@@ -50,3 +51,22 @@ def test_team_agent_factory_receives_only_public_input_for_all_hooks():
     assert client.post('/api/auto-step',json={}).get_json()['code']=='STUCK'
     assert client.get('/api/state').get_json()==initial
     assert len(seen)==3
+
+
+@pytest.mark.parametrize('pid,target,status', [
+    ('village-3-links','B2',CRIMINAL), ('village-4-links','C3',INNOCENT)])
+def test_new_cases_have_exactly_one_solution_and_need_both_initial_extensions(pid,target,status):
+    game = GameEngine(pid)
+    state = game.knowledge()
+    assert {c['type'] for c in state['clues']} == {'COMPARE','CONTIGUOUS'}
+    result = ExhaustiveAgent().classify(state)
+    assert result.model_count > 1
+    assert result.statuses[target] == status
+    for clue in state['clues']:
+        assert ExhaustiveAgent().classify(state | {'clues':[clue]}).statuses[target] == UNKNOWN
+    complete = state | {'clues':list(game.puzzle['clues'].values())}
+    # Enumerates all 2^(N*N - initial_count) possibilities, not solver model counts.
+    count, statuses = brute_force(complete)
+    assert count == 1
+    assert all(statuses[c] == (CRIMINAL if role else INNOCENT)
+               for c,role in game.puzzle['solution'].items() if c not in state['known'])

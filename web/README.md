@@ -1,6 +1,6 @@
 # Gridwolf — bàn giao phạm vi 4.1
 
-Web game Ma Sói suy luận trên lưới, Python/Flask + HTML/CSS/JavaScript thuần. Đối chiếu **AI - Project 2.pdf, trang 5, mục 4.1 Reimplement the Game**. Công việc ở đây là giao diện, Game Engine, dữ liệu màn và điểm tích hợp thuật toán. Không bổ sung ngôn ngữ clue, CNF encoder, DPLL, solver mới, benchmark hay báo cáo cho các mục 4.2 trở đi.
+Web game Ma Sói suy luận trên lưới, Python/Flask + HTML/CSS/JavaScript thuần. Bản gốc bàn giao game/GUI theo mục 4.1; hiện đã thêm hai clue thử nghiệm COMPARE và CONTIGUOUS cùng hai màn mới. Agent demo hỗ trợ cả hai; chưa có CNF encoder/DPLL chính thức hoặc benchmark của nhóm.
 
 ## Chạy web
 
@@ -22,7 +22,7 @@ Mỗi cookie phiên trỏ tới một ván ở RAM server; không có database h
 | --- | --- |
 | `app.py` | Flask/API, phiên chơi, `create_app(agent_factory=...)` để đăng ký implementation của nhóm. |
 | `game/engine.py` | `GameEngine`: puzzle đầy đủ, vai bí mật, clue úp; Load, Restart, kiểm verdict và lật thẻ. |
-| `game/puzzles.py` | Bốn hồ sơ soạn tay, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough. |
+| `game/puzzles.py` | Sáu hồ sơ cố định, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough bốn màn gốc. |
 | `game/logic.py` | Interface `LogicAgent`, `Inference`, semantic evaluator và implementation demo **đã có trước** `ExhaustiveAgent`. Được giữ và dùng lại, không viết lại thuật toán trong đợt 4.1 này. |
 | `static/views.html`, `static/app.js`, `static/style.css` | Routing hash, render, tương tác, spotlight và responsive. Không chứa đáp án hay clue úp. |
 | `static/scenes/gridwolf-village-night.webp` | Cảnh Gridwolf riêng, không lấy asset/nhân vật/logo của Agrou. |
@@ -141,9 +141,34 @@ Các kết quả nghiệp vụ trả HTTP 200 với code. JSON/type sai hoặc I
 
 Một puzzle giữ các trường hiện có: `id`, `title`, `size`, `layout`, `solution`, `clues`, `initial`. `layout` theo thứ tự hàng rồi cột; tọa độ A–E là cột, 1–5 là hàng. `solution` ánh xạ ID sang bool. `clues` ánh xạ chủ thẻ sang một clue; thêm `id="clue-<owner>"` và `owner`. `initial` chứa ID những thẻ mở đầu.
 
-Chỉ dùng sáu template đã hỗ trợ: FACT, SAME, DIFFERENT, EXACTLY, AT_LEAST, AT_MOST. Vùng: LIST, ROW, COLUMN (A=1), NEIGHBORS (có đường chéo, không có tâm). Các helper trong `game/puzzles.py` chỉ tạo dict theo schema, không thêm loại logic. `referenced_cells()` và evaluator dùng chung giải vùng; frontend lấy trực tiếp `cells` từ DTO công khai, không regex từ lời văn.
+Hỗ trợ sáu template gốc FACT, SAME, DIFFERENT, EXACTLY, AT_LEAST, AT_MOST và hai extension COMPARE, CONTIGUOUS. Vùng gốc: LIST, ROW, COLUMN (A=1), NEIGHBORS (có đường chéo, không có tâm). `referenced_cells()` giải vùng; frontend lấy trực tiếp `cells` từ DTO công khai, không regex từ lời văn. Evaluator trực tiếp và agent demo đều xử lý được hai extension.
 
-Để thêm màn: tạo một hàm dữ liệu với đủ `size²` nhân vật/clue; đưa kết quả vào `PUZZLES`; thêm checkpoint vào `DEMO_PROOFS` nếu có bước ghép dự kiến; chạy test. Chọn màn tự lấy danh sách từ API. Ba thẻ kích thước 3×3, 4×4, 5×5; thẻ 5×5 giữ cả hai hồ sơ hiện có. Không có generator hoặc nút Ván mới giả.
+Để thêm màn: tạo một hàm dữ liệu với đủ `size²` nhân vật/clue; đưa kết quả vào `PUZZLES`; thêm kiểm tra cho bước ghép dự kiến; chạy test. Chọn màn tự lấy danh sách từ API. Ba thẻ kích thước 3×3, 4×4, 5×5; mỗi thẻ hiện có hai hồ sơ, chọn bằng nút “Hồ sơ khác”. Không sinh puzzle ngẫu nhiên khi chơi.
+
+### Hai clue thử nghiệm
+
+`COMPARE` so sánh bằng nhau, mỗi vế chọn một tâm và vai được đếm:
+
+```json
+{"type":"COMPARE","left":{"cell":"B3","status":"INNOCENT"},"right":{"cell":"C3","status":"CRIMINAL"}}
+```
+
+Ví dụ trên: số Dân làng quanh B3 bằng số Sói quanh C3. Mỗi vùng gồm ngang/dọc/chéo, loại chính tâm của vùng đó. Hai vùng có thể chồng nhau và đếm độc lập. Highlight là hợp hai vùng, không tự thêm tâm; một tâm vẫn được highlight nếu thuộc vùng kề của tâm còn lại. Chỉ hỗ trợ quan hệ bằng nhau trong đợt này.
+
+`CONTIGUOUS` yêu cầu tất cả người mang vai chỉ định trên một hàng tạo thành một đoạn liền:
+
+```json
+{"type":"CONTIGUOUS","region":{"kind":"ROW","row":2},"status":"CRIMINAL"}
+```
+
+Ví dụ: các Sói trên hàng 2 nằm liền nhau, không có Dân làng chen giữa; không nối vòng từ cột cuối về cột đầu. Hàng có 0 hoặc 1 người thuộc vai được đếm cũng thỏa. Chưa mở rộng sang cột. Highlight toàn bộ hàng vì mọi ô trên hàng tham gia ràng buộc.
+
+| Hồ sơ mới | ID | Mở sẵn | Bước đầu cần cả hai extension |
+| --- | --- | --- | --- |
+| Dấu chân ven hồ · 3×3 | `village-3-links` | A1, A2 | B2 là Sói |
+| Dãy nhà im tiếng · 4×4 | `village-4-links` | A1, A2 | C3 là Dân làng |
+
+Cả hai màn có đúng một nghiệm khi tính toàn bộ clue và trạng thái mở sẵn. `tests/test_authored_cases.py` kiểm bằng duyệt toàn bộ phép gán độc lập (128 trường hợp cho 3×3, 16.384 trường hợp cho 4×4), kiểm tra tách từng clue ở bước đầu; `test_game.py` kiểm evaluator và API, `test_gridwolf.py` đối chiếu agent với brute-force. `browser_demo.py` bao gồm cả luồng thử hai màn mới. Các nhãn/clue của màn được lưu cố định trên server. Chưa có CNF cho hai loại mới; thành viên encoder/SAT cần bổ sung theo schema trên khi tích hợp. Không thay đổi `docs/assignment.md`.
 
 ### Walkthrough (server/local docs, không phục vụ vào gameplay)
 
@@ -167,7 +192,7 @@ Các checkpoint được kiểm ở đúng public state bởi `tests/test_author
 .\.venv\Scripts\python tests\browser_fit.py
 ```
 
-Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server kiểm thử riêng. Test dữ liệu/backend hiện có 29 bài. Browser demo kiểm bốn hồ sơ, điểm chứng minh thủ công, hai từ chối, Hint, Auto Solve từng bước, Load/Restart, giữ phiên, spotlight bật/tắt, Sổ tối và kiểm response không chứa vai/clue úp. Browser fit kiểm 1366×768 và 1440×900 ở zoom 100%, không có cuộn dọc bên trong bàn, hàng cuối phán được và popover đổi hướng; Sổ cuộn riêng; mobile/cửa sổ thấp cuộn tự nhiên.
+Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server kiểm thử riêng. Test dữ liệu/backend hiện có 47 bài, gồm các kiểm tra extension và tính duy nhất độc lập. Browser demo kiểm sáu hồ sơ (gồm hai màn extension), điểm chứng minh thủ công, hai từ chối, Hint, Auto Solve từng bước, Load/Restart, giữ phiên, spotlight bật/tắt, Sổ tối và kiểm response không chứa vai/clue úp. Browser fit kiểm 1366×768 và 1440×900 ở zoom 100%, không có cuộn dọc bên trong bàn, hàng cuối phán được và popover đổi hướng; Sổ cuộn riêng; mobile/cửa sổ thấp cuộn tự nhiên.
 
 Ảnh kiểm chứng local ở `tmp/qa/` (gitignore). Mobile là Chrome mô phỏng viewport, chưa kiểm thiết bị thật/Safari/Firefox/production. Test/API không phải chứng nhận bảo mật toàn diện. Không có thí nghiệm hay báo cáo cho mục 4.5/4.6 trong gói 4.1 này.
 

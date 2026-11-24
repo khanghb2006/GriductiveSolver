@@ -66,6 +66,14 @@ def neighbors(cell):
     return dict(kind='NEIGHBORS',cell=cell)
 
 
+def compare(a, status_a, b, status_b):
+    return dict(type='COMPARE', left=dict(cell=a, status=status_a), right=dict(cell=b, status=status_b))
+
+
+def contiguous(row_number, status):
+    return dict(type='CONTIGUOUS', region=row(row_number), status=status)
+
+
 def case(pid,title,size,names,jobs,labels,authored,initial):
     layout=[dict(id=f'{chr(65+i%size)}{i//size+1}',row=i//size+1,column=i%size+1,
                  name=name,profession=jobs[i]) for i,name in enumerate(names[:size*size])]
@@ -182,7 +190,48 @@ def mist_wharf_puzzle():
     },['A1','E1'])
 
 
-PUZZLES={p['id']:p for p in (tutorial(),north_gate(),red_moon_puzzle(),mist_wharf_puzzle())}
+def lakeside_puzzle():
+    # Both initial extensions are necessary to prove the first move (B2).
+    return case('village-3-links','Dấu chân ven hồ',3,NAMES,JOBS,
+        [True,False,True,True,True,False,True,True,False],{
+        'A1':compare('B3',INNOCENT,'C3',CRIMINAL),
+        'A2':contiguous(2,CRIMINAL),
+        'B2':count('EXACTLY',2,neighbors('A1')),
+        'B1':count('EXACTLY',4,neighbors('A2')),
+        'C2':count('EXACTLY',3,neighbors('B3')),
+        'A3':count('EXACTLY',2,row(3)),
+        'B3':count('EXACTLY',2,row(1)),
+        'C1':count('EXACTLY',1,column('C')),
+        'C3':count('EXACTLY',2,neighbors('C3')),
+    },['A1','A2'])
+
+
+def quiet_street_puzzle():
+    # Same-role comparison + a contiguous INNOCENT block first force C3.
+    return case('village-4-links','Dãy nhà im tiếng',4,NAMES,JOBS[5:]+JOBS[:5],
+        [True,True,True,False,True,True,False,False,
+         True,False,False,False,True,True,True,True],{
+        'A1':compare('A1',CRIMINAL,'C2',CRIMINAL),
+        'A2':contiguous(3,INNOCENT),
+        'C3':count('EXACTLY',1,row(3)),
+        'B3':count('EXACTLY',3,neighbors('C2')),
+        'B1':count('EXACTLY',2,neighbors('D3')),
+        'B2':count('EXACTLY',2,row(2)),
+        'C2':count('EXACTLY',1,neighbors('D2')),
+        'D2':count('EXACTLY',4,neighbors('A2')),
+        'A3':count('EXACTLY',6,neighbors('B3')),
+        'D3':count('EXACTLY',4,neighbors('A3')),
+        'A4':count('EXACTLY',1,neighbors('D4')),
+        'B4':count('EXACTLY',2,neighbors('C4')),
+        'C4':count('EXACTLY',1,column('D')),
+        'C1':count('EXACTLY',5,neighbors('B2')),
+        'D1':count('EXACTLY',2,neighbors('A4')),
+        'D4':count('EXACTLY',3,row(1)),
+    },['A1','A2'])
+
+
+PUZZLES={p['id']:p for p in (tutorial(),north_gate(),red_moon_puzzle(),mist_wharf_puzzle(),
+                            lakeside_puzzle(),quiet_street_puzzle())}
 
 # Server-only walkthrough checkpoints, also used to verify clue dependency in tests.
 DEMO_PROOFS={

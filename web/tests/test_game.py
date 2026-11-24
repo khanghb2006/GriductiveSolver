@@ -4,8 +4,8 @@ import pytest
 from app import create_app
 from game.engine import GameEngine
 from game.logic import (CRIMINAL, INNOCENT, UNKNOWN, ExhaustiveAgent, evaluate,
-                        region_cells, proof_support)
-from game.puzzles import PUZZLES
+                        region_cells, proof_support, referenced_cells)
+from game.puzzles import PUZZLES, compare, contiguous
 
 
 def test_three_verdict_results_and_two_clue_necessity():
@@ -141,3 +141,72 @@ def test_api_privacy_sessions_and_controls():
     assert a.post('/api/verdict',json={'cell':[],'status':{}}).status_code == 400
     assert a.post('/api/load',json={'puzzle_id':[]}).status_code == 400
     assert a.get('/').status_code == 200
+
+
+@pytest.mark.parametrize('left_role,right_role', list(product((CRIMINAL, INNOCENT), repeat=2)))
+def test_compare_truth_table_with_overlap_and_excluded_centers(left_role, right_role):
+    layout = PUZZLES['village-3']['layout']
+    ids = [p['id'] for p in layout]
+    clue = compare('A1', left_role, 'B2', right_role)
+    left_neighbors = ['B1', 'A2', 'B2']
+    right_neighbors = [c for c in ids if c != 'B2']
+    assert set(referenced_cells(clue, layout)) == set(left_neighbors + right_neighbors)
+    for bits in product((False, True), repeat=9):
+        assignment = dict(zip(ids, bits))
+        left = sum(assignment[c] == (left_role == CRIMINAL) for c in left_neighbors)
+        right = sum(assignment[c] == (right_role == CRIMINAL) for c in right_neighbors)
+        assert evaluate(clue, assignment, layout) == (left == right)
+
+
+@pytest.mark.parametrize('role', [CRIMINAL, INNOCENT])
+def test_contiguous_all_row_patterns_including_empty_singleton_and_gap(role):
+    layout = PUZZLES['village-4']['layout']
+    clue = contiguous(2, role)
+    cells = ['A2', 'B2', 'C2', 'D2']
+    assert referenced_cells(clue, list(reversed(layout))) == cells
+    for bits in product((False, True), repeat=4):
+        assignment = {p['id']:False for p in layout} | dict(zip(cells, bits))
+        target = [bit == (role == CRIMINAL) for bit in bits]
+        # A separated target/opposite/target triple violates a single block.
+        gap = any(target[i] and not target[j] and target[k]
+                  for i in range(4) for j in range(i+1,4) for k in range(j+1,4))
+        assert evaluate(clue, assignment, layout) == (not gap)
+
+
+@pytest.mark.parametrize('clue', [compare('Z9',CRIMINAL,'A1',INNOCENT),
+                                 compare('A1','WOLF','B1',INNOCENT),
+                                 contiguous(99,CRIMINAL), contiguous(True,CRIMINAL),
+                                 contiguous(1,'VILLAGER')])
+def test_invalid_extension_parameters_are_rejected(clue):
+    layout = PUZZLES['village-3']['layout']
+    assignment = {p['id']:False for p in layout}
+    with pytest.raises(ValueError):
+        evaluate(clue, assignment, layout)
+    with pytest.raises(ValueError):
+        ExhaustiveAgent().classify(dict(layout=layout, known={}, clues=[clue]))
+
+
+@pytest.mark.parametrize('pid', ['village-3-links', 'village-4-links'])
+def test_extensions_api_text_highlight_hints_verdicts_and_auto_solve(pid):
+    client = create_app().test_client()
+    response = client.post('/api/load',json={'puzzle_id':pid}).get_json()
+    state = response['state']
+    assert len(state['clues']) == 2
+    assert 'solution' not in state
+    assert 'xung quanh' in state['clues'][0]['text']
+    assert 'nằm liền nhau' in state['clues'][1]['text']
+    for clue in state['clues']:
+        assert set(clue['cells']) == set(referenced_cells(clue, state['layout']))
+    assert client.post('/api/hint',json={}).get_json()['state'] == state
+    assert client.post('/api/hint',json={}).get_json()['clue_ids']
+    steps = 0
+    while not state['completed']:
+        result = client.post('/api/auto-step',json={}).get_json()
+        assert result['code'] == 'ACCEPTED'
+        state = result['state']
+        assert len(state['clues']) == len(state['known'])
+        assert all(c['owner'] in state['known'] for c in state['clues'])
+        assert 'solution' not in state
+        steps += 1
+        assert steps <= state['total'] - 2
+    assert steps == state['total'] - 2

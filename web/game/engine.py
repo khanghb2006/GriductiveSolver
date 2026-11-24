@@ -8,6 +8,14 @@ from .puzzles import PUZZLES
 def clue_text(clue, layout):
     cells = ' · '.join(referenced_cells(clue, layout))
     kind = clue['type']
+    if kind == 'COMPARE':
+        role = lambda s: 'Sói' if s == CRIMINAL else 'Dân làng'
+        left, right = clue['left'], clue['right']
+        return (f'Số {role(left["status"])} xung quanh {left["cell"]} bằng số '
+                f'{role(right["status"])} xung quanh {right["cell"]} (không tính ô trung tâm).')
+    if kind == 'CONTIGUOUS':
+        role = 'Sói' if clue['status'] == CRIMINAL else 'Dân làng'
+        return f'Các {role} trên hàng {clue["region"]["row"]} nằm liền nhau thành một đoạn.'
     if kind == 'FACT':
         return f'{cells} là ' + ('Đồng phạm.' if clue['status'] == CRIMINAL else 'Vô can.')
     if kind == 'SAME':

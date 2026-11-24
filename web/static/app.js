@@ -159,6 +159,8 @@ function selectCase(id) {
 }
 // cells is the exact public region resolved by the engine. Never parse clue prose.
 function clueParts(c) {
+  // Extension prose is supplied by the engine; c.cells still drives highlighting.
+  if (c.type === 'COMPARE' || c.type === 'CONTIGUOUS') return null;
   const group = (c.cells || []).join(' · ');
   if (c.type === 'FACT') return {before: '', group, after: ` là ${c.status === 'CRIMINAL' ? 'Sói' : 'Dân làng'}.`};
   if (c.type === 'SAME') return {before: '', group, after: ': hai người có cùng trạng thái.'};

@@ -26,13 +26,56 @@ def region_cells(region, layout):
 
 
 def referenced_cells(clue, layout):
+    if clue['type'] == 'COMPARE':
+        left, right = comparison_sides(clue, layout)
+        return list(dict.fromkeys(left[0] + right[0]))
+    if clue['type'] == 'CONTIGUOUS':
+        return contiguous_row(clue, layout)
     return region_cells(clue['region'], layout) if 'region' in clue else list(clue['cells'])
+
+
+def checked_role(status):
+    if status not in (CRIMINAL, INNOCENT):
+        raise ValueError('Invalid counted status')
+    return status == CRIMINAL
+
+
+def comparison_sides(clue, layout):
+    """Each side counts one role around its own center, excluding the center."""
+    sides = []
+    ids = {p['id'] for p in layout}
+    for key in ('left', 'right'):
+        side = clue[key]
+        if not isinstance(side.get('cell'), str) or side['cell'] not in ids:
+            raise ValueError('Invalid comparison center')
+        sides.append((region_cells(dict(kind='NEIGHBORS', cell=side['cell']), layout),
+                      checked_role(side['status'])))
+    return sides
+
+
+def contiguous_row(clue, layout):
+    region = clue['region']
+    if region.get('kind') != 'ROW' or type(region.get('row')) is not int:
+        raise ValueError('CONTIGUOUS requires a row')
+    row = sorted((p for p in layout if p['row'] == region['row']), key=lambda p:p['column'])
+    if not row:
+        raise ValueError('Invalid contiguous row')
+    checked_role(clue['status'])
+    return [p['id'] for p in row]
 
 
 def evaluate(clue, assignment, layout):
     cells = referenced_cells(clue, layout)
     values = [assignment[c] for c in cells]
     kind = clue['type']
+    if kind == 'COMPARE':
+        left, right = comparison_sides(clue, layout)
+        return (sum(assignment[c] == left[1] for c in left[0]) ==
+                sum(assignment[c] == right[1] for c in right[0]))
+    if kind == 'CONTIGUOUS':
+        target = checked_role(clue['status'])
+        positions = [i for i, value in enumerate(values) if value == target]
+        return not positions or positions[-1] - positions[0] + 1 == len(positions)
     if kind == 'FACT':
         return values[0] == (clue['status'] == CRIMINAL)
     if kind == 'SAME':
@@ -79,7 +122,23 @@ class ExhaustiveAgent:
             cells = tuple(referenced_cells(clue, layout))
             kind = clue['type']
             value = clue.get('k') if 'region' in clue or kind in ('EXACTLY','AT_LEAST','AT_MOST') else clue.get('status')
-            if kind in ('EXACTLY','AT_LEAST','AT_MOST'):
+            if kind == 'COMPARE':
+                # Shared cells must use the SAME variable in both counts.
+                coefficients, constant = {}, 0
+                for sign, (side_cells, role) in zip((1, -1), comparison_sides(clue, layout)):
+                    for cell in side_cells:
+                        coefficients[cell] = coefficients.get(cell, 0) + sign * (1 if role else -1)
+                        if not role:
+                            constant += sign
+                value = ({c:k for c,k in coefficients.items() if k}, -constant)
+            elif kind == 'CONTIGUOUS':
+                target = checked_role(clue['status'])
+                # Empty, singleton and every longer interval are valid blocks.
+                value = {tuple(not target for _ in cells)}
+                for start in range(len(cells)):
+                    for end in range(start + 1, len(cells) + 1):
+                        value.add(tuple(target if start <= i < end else not target for i in range(len(cells))))
+            elif kind in ('EXACTLY','AT_LEAST','AT_MOST'):
                 if type(value) is not int or not 0 <= value <= len(cells):
                     raise ValueError('Invalid count')
             elif kind not in ('FACT','SAME','DIFFERENT'):
@@ -89,6 +148,18 @@ class ExhaustiveAgent:
         def bounds(constraint, assignment):
             """Return (still possible, already true for every extension)."""
             kind, cells, value = constraint
+            if kind == 'COMPARE':
+                coefficients, target = value
+                known = sum(k * assignment[c] for c,k in coefficients.items() if c in assignment)
+                pending = [k for c,k in coefficients.items() if c not in assignment]
+                lower = known + sum(min(0,k) for k in pending)
+                upper = known + sum(max(0,k) for k in pending)
+                return lower <= target <= upper, lower == upper == target
+            if kind == 'CONTIGUOUS':
+                compatible = sum(all(c not in assignment or assignment[c] == bit
+                                     for c,bit in zip(cells, pattern)) for pattern in value)
+                free = sum(c not in assignment for c in cells)
+                return compatible > 0, compatible == 1 << free
             if kind == 'FACT':
                 if cells[0] not in assignment:
                     return True, False

@@ -1,0 +1,448 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper]{report}
+
+% ---------- Encoding, fonts (T5 supports Vietnamese names on the cover) -----
+\usepackage{fontspec , float}
+\setmainfont{TeX Gyre Termes}
+\usepackage{microtype}
+\usepackage[english,vietnamese]{babel}
+
+% ---------- Page layout: 2.5 cm margins on all sides ----------
+\usepackage[a4paper,margin=2.5cm,headheight=16pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.0}                 % tài liệu hướng dẫn cho phép tối đa 10 trang
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.3em}
+\setlength{\emergencystretch}{2em}
+
+% ---------- Packages ----------
+\usepackage{booktabs,tabularx,array,graphicx,float,caption,enumitem,xcolor , subcaption}
+\usepackage[most]{tcolorbox}
+\usepackage{listings,fancyhdr,titlesec,xurl,hyperref,bookmark}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+
+\definecolor{HCMUSBlue}{HTML}{145DA0}
+\definecolor{SoftGray}{HTML}{F3F4F6}
+
+% ---------- Captions: 10 pt ----------
+\captionsetup{font=footnotesize,labelfont=bf,justification=centering}
+
+\setlist[itemize]{leftmargin=1.5em,itemsep=0pt,topsep=0.3em}
+\setlist[enumerate]{itemsep=0pt,topsep=0.3em}
+% ---------- Syntax highlighting for code listings ----------
+\definecolor{CodeKeyword}{HTML}{1F4FBF}   % từ khóa C
+\definecolor{CodeType}{HTML}{267F99}      % kiểu dữ liệu
+\definecolor{CodeComment}{HTML}{2E7D32}   % chú thích
+\definecolor{CodeString}{HTML}{B3261E}    % chuỗi và ký tự
+\definecolor{CodeNumber}{HTML}{B45F06}    % số
+\definecolor{CodePrep}{HTML}{7B1FA2}      % #include, #define
+\definecolor{CodeSyscall}{HTML}{C2185B}   % lời gọi hệ thống
+\definecolor{CodeLib}{HTML}{00796B}       % hàm thư viện
+\lstdefinestyle{ccode}{
+  language=C,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{CodeKeyword}\bfseries,
+  keywordstyle=[2]\color{CodeType},
+  commentstyle=\color{CodeComment}\itshape,
+  stringstyle=\color{CodeString},
+  numberstyle=\color{CodeNumber},
+  directivestyle=\color{CodePrep}\bfseries,
+  emphstyle=\color{CodeSyscall}\bfseries,
+  emphstyle=[2]\color{CodeLib},
+  morekeywords=[2]{uint,uint64,uchar,ushort},
+  emph={interpose,sbrk,open,exec,exit,fork,wait,read,write},
+  emph=[2]{argstr,argint,strncmp,safestrcpy,memset,memcmp,strlen,printf,fprintf},
+  breaklines=true,frame=single,rulecolor=\color{black!25},
+  columns=fullflexible,backgroundcolor=\color{SoftGray},showstringspaces=false}
+\lstdefinestyle{terminal}{
+  language={},keywordstyle={},emph={},emph=[2]{},commentstyle={},stringstyle={},
+  basicstyle=\ttfamily\scriptsize,
+  moredelim=[l][\color{HCMUSBlue}\bfseries]{\$},
+  breaklines=true,frame=single,rulecolor=\color{black!25},
+  columns=fullflexible,backgroundcolor=\color{SoftGray},showstringspaces=false}
+\lstset{style=ccode,aboveskip=3pt,belowskip=0pt}
+
+  % ---------- Header / footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small Project 2: Griductive Solver}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------- Headings: 16 pt chapter, 14 pt section, 12 pt subsection (all bold) ----------
+\titleclass{\chapter}{straight}
+\titleformat{\chapter}[display]{\bfseries\fontsize{16}{20}\selectfont}{\filright\MakeUppercase{Chương \thechapter}}{0.5ex}{\titlerule\vspace{1ex}\filright}
+\titlespacing*{\chapter}{0pt}{10pt}{6pt}
+\titleformat{\section}{\bfseries\fontsize{14}{17}\selectfont}{\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titleformat{\subsection}{\bfseries\fontsize{12}{15}\selectfont}{\thesubsection}{0.7em}{}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\setcounter{tocdepth}{1}
+
+\hypersetup{colorlinks=true,linkcolor=HCMUSBlue,urlcolor=HCMUSBlue,
+  pdftitle={Project 2: Griductive Solver},pdfauthor={Nhóm sinh viên lớp 24CNTN}}
+\renewcommand{\contentsname}{MỤC LỤC}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% ---------- Edit only these fields to update the cover and contribution table ----------
+\newcommand{\ClassName}{24CNTN}
+\newcommand{\GroupID}{[Mã nhóm]}
+\newcommand{\InstructorName}{[Tên giảng viên]}
+\newcommand{\MemberOne}{Huỳnh Bảo Khang }
+\newcommand{\IDOne}{24120507}
+\newcommand{\MemberTwo}{Phạm Minh Đạt }
+\newcommand{\IDTwo}{24120174}
+\newcommand{\MemberThree}{Huỳnh Nguyên Phát }
+\newcommand{\IDThree}{24120005}
+\newcommand{\MemberFour}{Trần Thành Nhân }
+\newcommand{\IDFour}{24120402}
+\newcommand{\MemberFive}{Nguyễn Phạm Xuân Cương }
+\newcommand{\IDFive}{24120499}
+\newcommand{\SubmissionDate}{[Ngày nộp]}
+\newcommand{\cmd}[1]{\texttt{#1}}    % lệnh: make qemu
+\newcommand{\file}[1]{\texttt{#1}}   % tên file: user/sleep.c
+\newcommand{\term}[1]{\emph{#1}}     % thuật ngữ lần đầu
+
+% Đánh dấu đỏ cho mọi thứ vẫn cần điền hoặc kiểm tra trước khi nộp.
+% Tìm kiếm "TODO" trong tệp và xóa tất cả.
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+% ---------- Logo: use forward slashes and match the filename exactly ----------
+\newcommand{\LogoFile}{assets/hcmus-logo.png}
+
+\newcommand{\SchoolLogo}{%
+    \IfFileExists{\LogoFile}{%
+        \includegraphics[width=4cm,height=3.3cm,keepaspectratio]{\LogoFile}%
+    }{%
+        \fbox{%
+            \begin{minipage}[c][3cm][c]{3.8cm}
+                \centering
+                \small LOGO HCMUS\par
+                \vspace{0.2cm}
+                \footnotesize Tải logo trường lên\par
+                theo đường dẫn trong\par
+                \texttt{\string\LogoFile}.
+            \end{minipage}%
+        }%
+    }%
+}
+
+% ---------- Helper boxes ----------
+\newcommand{\FillIn}[2][0.65cm]{%
+\begin{tcolorbox}[colback=SoftGray,colframe=black!25,boxrule=0.4pt,
+  arc=0pt,left=7pt,right=7pt,top=6pt,bottom=6pt]
+{\small\setstretch{1.15}\itshape #2\par}\vspace{#1}
+\end{tcolorbox}}
+
+% Đặt ảnh chụp màn hình vào figures/. Tệp bị thiếu sẽ được thay thế bằng một hộp có thể chỉnh sửa.
+% \Shot[width]{file name}{caption}
+\newcommand{\Shot}[3][0.95\linewidth]{%
+\begin{figure}[H]\centering
+\IfFileExists{figures/#2}{\includegraphics[width=#1]{figures/#2}}{\FillIn[0.3cm]{Chèn ảnh chụp màn hình \texttt{figures/#2}: #3}}
+\caption{#3}
+\end{figure}}
+
+% Hai ảnh chụp màn hình cạnh nhau trong một hình: \ShotPair{left file}{right file}{caption}
+\newcommand{\ShotPair}[3]{%
+\begin{figure}[H]\centering
+\begin{minipage}[t]{0.49\linewidth}\centering
+\IfFileExists{figures/#1}{\includegraphics[width=\linewidth]{figures/#1}}{\FillIn[0cm]{Chèn \texttt{figures/#1}}}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}\centering
+\IfFileExists{figures/#2}{\includegraphics[width=\linewidth]{figures/#2}}{\FillIn[0cm]{Chèn \texttt{figures/#2}}}
+\end{minipage}
+\caption{#3}
+\end{figure}}
+
+\begin{document}
+\begin{titlepage}
+
+\centering
+{\Large\bfseries ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}\\[0.15cm]
+{\large\bfseries TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}\\[0.25cm]
+{\normalsize\bfseries KHOA CÔNG NGHỆ THÔNG TIN}\\[0.35cm]
+{\normalsize Lớp: \ClassName}\\[0.65cm]
+
+\SchoolLogo
+\par\vspace{0.7cm}
+
+\rule{\textwidth}{1.5pt}\\[0.55cm]
+{\fontsize{24}{30}\selectfont\bfseries BÁO CÁO THỰC HÀNH}\\[0.4cm]
+{\Large\bfseries Project 2: Griductive Solver}\\[0.55cm]
+\rule{\textwidth}{1.5pt}\\[0.45cm]
+{\large\bfseries Môn học: Cơ sở Trí tuệ Nhân tạo}\par
+\vspace{0.25cm}
+
+\vspace{0.55cm}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Giảng viên hướng dẫn:}\\[0.15cm]
+GS.TS Lê Hoài Bắc     \\      
+TS. Nguyễn Ngọc Đức  
+\end{tabular}
+\hspace{2.5cm}
+\begin{tabular}[t]{@{}l@{}}
+\textbf{Thành viên nhóm:}\\[0.15cm]
+\MemberOne (\IDOne) \\
+\MemberTwo (\IDTwo)\\
+\MemberThree (\IDThree) \\
+\MemberFour (\IDFour)\\
+\MemberFive (\IDFive) \\
+
+\end{tabular}
+\end{center}
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+% =====================================================
+%  BÁO CÁO CHÍNH
+% =====================================================
+\pagenumbering{arabic}
+\parindent=1.5em \leftskip=0pt \rightskip=0pt \parfillskip=0pt plus 1fil
+
+
+\chapter{Giới thiệu và Phân công công việc}
+
+\section{Mục tiêu và Phạm vi}
+\noindent\textbf{Mục tiêu.}
+Griductive là trò chơi suy luận trên lưới, trong đó mỗi nhân vật bí mật là
+\texttt{CRIMINAL} hoặc \texttt{INNOCENT}. Nhóm xây dựng bộ giải không đoán mò:
+một phán quyết chỉ được đưa ra khi trạng thái đó đúng trong mọi mô hình thỏa các
+clue công khai. Hệ thống sử dụng logic mệnh đề, mã hóa CNF và bộ giải SAT DPLL
+tự cài đặt.
+
+\noindent\textbf{Phạm vi.}
+Báo cáo mô tả kiến trúc Engine--Encoder--DPLL--Agent--GUI, thuật toán DPLL,
+quy trình kiểm thử đối chiếu brute-force và thực nghiệm trên cùng một corpus
+gồm các lưới $3\times3$, $4\times4$ và $5\times5$.
+
+\section{Phân công công việc trong nhóm}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}p{2.1cm}>{\raggedright\arraybackslash}p{3.3cm}Y>{\centering\arraybackslash}p{1.6cm}@{}}
+\toprule
+\textbf{MSSV} & \textbf{Họ và tên} & \textbf{Nhiệm vụ} & \textbf{Hoàn thành}\\
+\midrule
+\IDOne & \MemberOne & Logic Agent, entailment, uniqueness, deduction loop và tích hợp & 100\%\\
+\IDTwo & \MemberTwo & Game Engine, clue model, semantic evaluator và bộ puzzle & 100\%\\
+\IDThree & \MemberThree & DPLL, assumptions, thống kê và experiments & 100\%\\
+\IDFour & \MemberFour & CNF encoder, suy dẫn mã hóa và tổng hợp báo cáo & 100\%\\
+\IDFive & \MemberFive & GUI, kiến trúc Engine/Agent và tương tác người dùng & 100\%\\
+\bottomrule
+\end{tabularx}
+\caption{Phân công nhiệm vụ và mức hoàn thành do nhóm ghi nhận.}
+\end{table}
+
+\chapter{Báo cáo các nhiệm vụ}
+
+\section{Kiến trúc và ranh giới dữ liệu}
+Game Engine giữ puzzle đầy đủ, nghiệm ẩn và các clue chưa mở. Agent chỉ nhận
+\texttt{public\_state} gồm layout, trạng thái đã biết và clue đã công khai.
+Encoder chuyển trạng thái này thành CNF; DPLL giải các truy vấn SAT; Agent dùng
+hai truy vấn đối nghịch để phân loại từng ô:
+\begin{itemize}
+  \item $KB \land \neg C_i$ UNSAT $\Rightarrow C_i$ là \texttt{CRIMINAL};
+  \item $KB \land C_i$ UNSAT $\Rightarrow C_i$ là \texttt{INNOCENT};
+  \item cả hai SAT $\Rightarrow$ trạng thái \texttt{UNKNOWN}.
+\end{itemize}
+Ranh giới này bảo đảm Agent không đọc đáp án bí mật và không thể hợp thức hóa
+một phán quyết chỉ vì nó tình cờ trùng nghiệm authored.
+
+\section{Thuật toán DPLL}
+
+\subsection{Giao diện và biểu diễn}
+Literal được biểu diễn bằng số nguyên có dấu; biến $i$ tương ứng ô thứ $i$ theo
+thứ tự hàng--cột. Công thức CNF là danh sách các clause. Giao diện chính là
+\texttt{solve(clauses, n\_vars, assumptions=())}; kết quả gồm cờ SAT, model đầy
+đủ và thống kê \texttt{decisions}, \texttt{propagations}, \texttt{backtracks},
+\texttt{runtime}.
+
+\subsection{Quy trình giải}
+\begin{enumerate}
+  \item Nạp assumptions và phát hiện cặp literal mâu thuẫn.
+  \item Thực hiện unit propagation đến điểm cố định. Clause chưa thỏa không còn
+        literal tự do tạo xung đột.
+  \item Nếu mọi clause đã thỏa, điền các biến chưa gán bằng giá trị mặc định để
+        trả model đầy đủ.
+  \item Chọn biến chưa gán có chỉ số nhỏ nhất, thử \texttt{True} trước rồi
+        \texttt{False}; quay lui khi một nhánh xung đột.
+  \item Ở biến thể so sánh, pure-literal elimination được chạy sau unit
+        propagation trên các clause chưa thỏa.
+\end{enumerate}
+
+\begin{lstlisting}[style=terminal]
+DPLL(F, A):
+  A <- UNIT_PROPAGATE(F, A)
+  if conflict: return UNSAT
+  if every clause is satisfied: return complete_model(A)
+  v <- smallest unassigned variable
+  for value in [True, False]:
+      result <- DPLL(F, A union {v=value})
+      if result is SAT: return result
+  return UNSAT
+\end{lstlisting}
+
+Unit propagation và pure-literal elimination bảo toàn tính khả thỏa. Khi phân
+nhánh, hai trường hợp $v=\texttt{True}$ và $v=\texttt{False}$ phủ toàn bộ model;
+vì vậy chỉ kết luận UNSAT sau khi cả hai nhánh thất bại. Việc chọn biến nhỏ nhất
+giúp kết quả tái lập giữa các lần chạy.
+
+\section{Thiết kế thực nghiệm}
+Corpus cố định gồm 4 bài $3\times3$, 4 bài $4\times4$ và 2 bài $5\times5$ làm
+stress test. Bốn benchmark bổ sung nằm trong \texttt{experiments/cases.py}; mỗi
+bài được kiểm nghiệm duy nhất và phải giải trọn vẹn. Hai biến thể DPLL cơ bản và
+DPLL có pure-literal chạy trên đúng cùng corpus. Runner giữ lại mọi trạng thái
+\texttt{COMPLETE}, \texttt{STUCK}, \texttt{INCONSISTENT}, \texttt{TIMEOUT} hoặc
+\texttt{ERROR} thay vì loại bỏ ca thất bại.
+
+Với mỗi lượt chạy, hệ thống ghi số biến chính/phụ, clause, SAT call, decisions,
+propagations, backtracks, số bước reveal và runtime vào
+\texttt{experiments/results.csv}. Encoder dùng biến phụ khi cần cho các ràng
+buộc mở rộng; trên corpus hiện tại, $n_{aux}$ nằm trong khoảng 0--40.
+
+\chapter{Kiểm thử và Xác minh}
+
+\section{Môi trường và Quy trình kiểm thử}
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}p{4.4cm}Y@{}}
+\toprule
+\textbf{Thành phần} & \textbf{Giá trị}\\
+\midrule
+Hệ điều hành & Ubuntu 24.04 trên WSL2\\
+CPU & 13th Gen Intel Core i5-13420H, 12 logical CPUs\\
+Python & 3.12.3\\
+Chiến lược chọn biến & Biến chưa gán nhỏ nhất; True trước, False sau\\
+Timeout & 30 giây/puzzle, kiểm giữa các deduction step\\
+\bottomrule
+\end{tabularx}
+\caption{Môi trường thực nghiệm.}
+\end{table}
+
+Trước khi đo, solver được đối chiếu brute-force trên 200 CNF ngẫu nhiên 1--5
+biến; test bao phủ SAT/UNSAT, assumptions, model đầy đủ và uniqueness. Bốn
+benchmark đều \texttt{COMPLETE}; regression suite đạt \textbf{123/123 test}.
+
+\section{Kết quả}
+\begin{table}[H]
+\centering\scriptsize\setlength{\tabcolsep}{3.2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lrrrrrrrrr@{}}
+\toprule
+\textbf{Puzzle} & $N$ & \textbf{Var} & \textbf{Clause} & \textbf{SAT} &
+\textbf{Decision} & \textbf{Propagation} & \textbf{Backtrack} &
+\textbf{Step} & \textbf{ms}\\
+\midrule
+village-3 & 3 & 9 & 27 & 63 & 30 & 363 & 0 & 7 & 3.798\\
+village-4 & 4 & 16 & 185 & 224 & 43 & 2163 & 0 & 14 & 17.359\\
+village-5 & 5 & 25 & 304 & 575 & 1472 & 7986 & 0 & 23 & 221.490\\
+village-5-mist & 5 & 25 & 218 & 575 & 1409 & 8547 & 5 & 23 & 187.484\\
+village-3-links & 3 & 9 & 121 & 63 & 81 & 1606 & 6 & 7 & 18.329\\
+village-4-links & 4 & 16 & 519 & 224 & 588 & 12217 & 133 & 14 & 540.917\\
+benchmark-3-river & 3 & 9 & 16 & 63 & 0 & 350 & 0 & 7 & 2.764\\
+benchmark-3-market & 3 & 9 & 16 & 63 & 0 & 350 & 0 & 7 & 4.448\\
+benchmark-4-tower & 4 & 16 & 29 & 224 & 0 & 1827 & 0 & 14 & 15.775\\
+benchmark-4-bridge & 4 & 16 & 28 & 224 & 0 & 1827 & 0 & 14 & 13.958\\
+\bottomrule
+\end{tabular}}
+\caption{Kết quả DPLL cơ bản trên corpus cố định.}
+\end{table}
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Biến thể} & \textbf{Hoàn tất} & \textbf{SAT call} & \textbf{Decision} &
+\textbf{Propagation} & \textbf{Backtrack} & \textbf{Tổng ms}\\
+\midrule
+DPLL & 10/10 & 2298 & 3623 & 37236 & 144 & 1026.322\\
+DPLL + pure-literal & 10/10 & 2298 & 3623 & 37252 & 144 & 1482.804\\
+\bottomrule
+\end{tabular}
+\caption{So sánh hai biến thể trên cùng corpus.}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[black!35] (0,-0.05) -- (0,1.45);
+\fill[HCMUSBlue] (0,0.80) rectangle (4.15,1.25);
+\fill[orange!85!red] (0,0.10) rectangle (5.99,0.55);
+\node[anchor=east,font=\footnotesize] at (-0.12,1.02) {DPLL};
+\node[anchor=east,font=\footnotesize] at (-0.12,0.32) {DPLL + pure};
+\node[anchor=west,font=\footnotesize] at (4.25,1.02) {1026.322 ms};
+\node[anchor=west,font=\footnotesize] at (6.09,0.32) {1482.804 ms};
+\end{tikzpicture}
+\caption{Tổng runtime của hai biến thể trong một lần chạy WSL2.}
+\end{figure}
+
+Cả hai biến thể hoàn tất 10/10 puzzle. Bài \texttt{village-4-links} và hai bài
+$5\times5$ chiếm phần lớn decisions và runtime. Pure-literal không giảm
+decisions trên corpus này;
+việc quét polarity chỉ tạo thêm overhead. Các benchmark chuỗi có 0 decision vì
+clue quan hệ/đếm kết hợp với trạng thái đã biết đủ để unit propagation suy ra
+toàn bộ đáp án.
+
+\chapter{Thảo luận và Tài liệu tham khảo}
+
+\section{Khó khăn, Lỗi gặp phải và Cách khắc phục}
+\begin{itemize}
+  \item \textbf{Thiếu dữ liệu đúng kích thước:} repo ban đầu chỉ có một bài
+        $3\times3$ và một bài $4\times4$. Nhóm bổ sung bốn benchmark chỉ dùng cho
+        experiments và kiểm tra tính duy nhất trước khi đo.
+  \item \textbf{Độ tin cậy của DPLL:} solver được đối chiếu với brute-force trên
+        CNF ngẫu nhiên thay vì chỉ kiểm các ví dụ thuận lợi.
+  \item \textbf{So sánh công bằng:} mọi biến thể dùng cùng corpus và giữ lại
+        trạng thái lỗi/timeout trong CSV.
+  \item \textbf{Khả năng tái lập:} chọn biến deterministic, lưu đầy đủ metrics
+        và sinh bảng báo cáo từ kết quả chạy thực tế.
+\end{itemize}
+
+Các hạn chế còn lại gồm: mã hóa đếm bằng tổ hợp trực tiếp có thể làm số clause
+tăng mạnh; benchmark bổ sung dễ hơn hồ sơ authored; runtime mới đo một lần và
+chịu nhiễu WSL2; timeout chưa ngắt được một SAT call đang chạy. Hướng phát triển
+là dùng sequential counter/cardinality network, chạy lặp để báo median và dùng
+process riêng để thực thi deadline cứng.
+
+\section{Đánh giá kết quả}
+Hệ thống tích hợp Game Engine, CNF Encoder, bộ giải DPLL và Logic Agent theo
+ranh giới dữ liệu đã thiết kế. Bộ giải đáp ứng giao diện \texttt{solve},
+assumptions, model đầy đủ và bốn thống kê theo yêu cầu. Runner experiments tạo
+bảng cho 4 bài $3\times3$ và 4 bài $4\times4$, đồng thời giữ 2 bài
+$5\times5$ làm stress test. Toàn bộ 123 test vượt qua và 20/20 lượt chạy của hai
+biến thể đạt \texttt{COMPLETE}. Kết quả chưa đủ để khẳng định pure-literal luôn
+kém hơn; nhóm chỉ kết luận heuristic này chưa có lợi trên corpus hiện tại.
+
+\section{Tái lập kết quả}
+\begin{lstlisting}[style=terminal]
+cd GriductiveSolver
+.venv/bin/python -m pytest -q
+.venv/bin/python -m experiments.run
+\end{lstlisting}
+Runner sinh \texttt{experiments/results.csv}, \texttt{summary.md} và
+\texttt{runtime.svg}. Báo cáo này dùng đúng số liệu trong CSV tại thời điểm
+25/11/2026.
+
+\section{Tài liệu tham khảo và Khai báo sử dụng công cụ AI}
+\begingroup\footnotesize
+\begin{enumerate}[leftmargin=1.5em,itemsep=1pt,topsep=2pt]
+\footnotesize
+\item Đề bài CSC14003 -- Project 2: \textit{Griductive Solver}, các mục
+      4.3--4.6 về DPLL, Logic Agent, Experiments và báo cáo.
+\item M. Davis, G. Logemann, D. Loveland, ``A Machine Program for
+      Theorem-Proving'', \textit{Communications of the ACM}, 1962.
+\item Mã nguồn nội bộ của nhóm: \texttt{game/dpll.py},
+      \texttt{game/stub\_sat.py}, \texttt{game/agent.py} và
+      \texttt{experiments/run.py}, truy xuất ngày 25/11/2026.
+\item OpenAI Codex/ChatGPT được sử dụng để hỗ trợ triển khai solver, tạo test,
+      tổ chức experiments và trình bày báo cáo. Nhóm đã kiểm chứng bằng
+      brute-force, test tự động và CSV; không có số liệu thực nghiệm nào được
+      điền thủ công.
+\end{enumerate}
+\endgroup
+\end{document}

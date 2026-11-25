@@ -10,7 +10,7 @@ from game.encoder import build_kb
 from game.engine import GameEngine
 from game.logic import CRIMINAL, INNOCENT
 from game.puzzles import PUZZLES
-from game.stub_sat import solve  # swap for the team's instrumented DPLL when ready
+from game.dpll import solve
 
 
 def make_agent():

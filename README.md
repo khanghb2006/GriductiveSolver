@@ -250,7 +250,29 @@ Các checkpoint được kiểm ở đúng public state bởi `tests/test_author
 
 Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server kiểm thử riêng. Test dữ liệu/backend hiện có 29 bài. Browser demo kiểm bốn hồ sơ, điểm chứng minh thủ công, hai từ chối, Hint, Auto Solve từng bước, Load/Restart, giữ phiên, spotlight bật/tắt, Sổ tối và kiểm response không chứa vai/clue úp. Browser fit kiểm 1366×768 và 1440×900 ở zoom 100%, không có cuộn dọc bên trong bàn, hàng cuối phán được và popover đổi hướng; Sổ cuộn riêng; mobile/cửa sổ thấp cuộn tự nhiên.
 
-Ảnh kiểm chứng local ở `tmp/qa/` (gitignore). Mobile là Chrome mô phỏng viewport, chưa kiểm thiết bị thật/Safari/Firefox/production. Test/API không phải chứng nhận bảo mật toàn diện. Không có thí nghiệm hay báo cáo cho mục 4.5/4.6 trong gói 4.1 này.
+Ảnh kiểm chứng local ở `tmp/qa/` (gitignore). Mobile là Chrome mô phỏng viewport, chưa kiểm thiết bị thật/Safari/Firefox/production. Test/API không phải chứng nhận bảo mật toàn diện. Thí nghiệm mục 4.5 được mô tả bên dưới.
+
+## DPLL và thực nghiệm 4.5
+
+`game/dpll.py` là bộ giải DPLL deterministic, hỗ trợ assumptions và ghi số
+decisions, propagations, backtracks cùng runtime. Chạy bộ thực nghiệm bằng:
+
+```powershell
+python -m experiments.run
+```
+
+Kết quả được ghi vào `experiments/results.csv`, `experiments/summary.md` và
+biểu đồ `experiments/runtime.svg`. Corpus có bốn bài 3×3, bốn bài
+4×4 và hai bài 5×5 stress. Bốn hồ sơ benchmark bổ sung nằm trong
+`experiments/cases.py`, không xuất hiện trong UI. Runner dùng đúng một corpus
+cho cả DPLL cơ bản và biến thể pure-literal, đồng thời giữ lại trạng thái lỗi,
+timeout hoặc stuck trong CSV thay vì loại bỏ.
+
+Kiểm riêng solver và corpus:
+
+```powershell
+python -m pytest tests/test_dpll.py -q
+```
 
 ## Đối chiếu 4.1
 

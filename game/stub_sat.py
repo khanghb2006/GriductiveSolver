@@ -1,40 +1,7 @@
-"""Temporary stand-ins for build_kb (encoder) and solve (DPLL). Delete once the real modules land."""
+"""Temporary SAT solver used until the team's instrumented DPLL lands."""
 from collections import namedtuple
-from itertools import combinations , product
-from .logic import CRIMINAL, evaluate, referenced_cells
 
-KB = namedtuple('KB', 'clauses n_primary n_aux')
 Result = namedtuple('Result', 'sat model')
-
-
-def build_kb(state):
-    layout = state['layout']
-    var = {cell['id']: i for i, cell in enumerate(layout, start=1)}  # row-major: C_i = i
-    clauses = [[var[c] if s == CRIMINAL else -var[c]] for c, s in state['known'].items()]
-    for clue in state['clues']:
-        vs = [var[c] for c in referenced_cells(clue, layout)]
-        kind = clue['type']
-        
-        if kind == 'FACT':
-            clauses.append([vs[0] if clue['status'] == CRIMINAL else -vs[0]])
-        
-        elif kind in ('SAME', 'DIFFERENT'):
-            a, b = vs[0], (vs[1] if kind == 'SAME' else -vs[1])
-            clauses += [[-a, b], [a, -b]]                      # a <-> b
-        
-        elif kind not in ('EXACTLY' , 'AT_LEAST' , 'AT_MOST'):
-            cells = referenced_cells(clue , layout)
-            for bits in product([False, True] , repeat = len(cells)):
-                if not evaluate(clue , dict(zip(cells , bits)) , layout):
-                    clauses.append([-v if bit else v for v , bit in zip(vs , bits)])
-                
-        else:                                                   # counting, direct combinations
-            k, size = clue['k'], len(vs)
-            if kind in ('EXACTLY', 'AT_MOST'):                  # no (k+1) cells all criminal
-                clauses += [[-v for v in group] for group in combinations(vs, k + 1)]
-            if kind in ('EXACTLY', 'AT_LEAST'):                 # among any (size-k+1) cells, one criminal
-                clauses += [list(group) for group in combinations(vs, size - k + 1)]
-    return KB(clauses, len(layout), 0)
 
 
 def solve(clauses, n_vars, assumptions=()):

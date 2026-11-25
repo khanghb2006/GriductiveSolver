@@ -1,27 +1,36 @@
 from copy import deepcopy
 from threading import RLock
 from .logic import (CRIMINAL, INNOCENT, UNKNOWN, ExhaustiveAgent,
-                    referenced_cells, proof_support, evaluate)
+                    checked_parity, checked_role, comparison, referenced_cells,
+                    proof_support, evaluate)
 from .puzzles import PUZZLES
 
 
 def clue_text(clue, layout):
-    cells = ' · '.join(referenced_cells(clue, layout))
     kind = clue['type']
     if kind == 'COMPARE':
-        role = lambda s: 'Sói' if s == CRIMINAL else 'Dân làng'
-        left, right = clue['left'], clue['right']
-        return (f'Số {role(left["status"])} xung quanh {left["cell"]} bằng số '
-                f'{role(right["status"])} xung quanh {right["cell"]} (không tính ô trung tâm).')
+        (left, left_role), (right, right_role), op = comparison(clue, layout)
+        relation = {'GT': 'nhiều hơn', 'EQ': 'bằng', 'LT': 'ít hơn'}[op]
+        left_name = 'Sói' if left_role else 'Dân làng'
+        right_name = 'Sói' if right_role else 'Dân làng'
+        if all('kind' not in clue[side] for side in ('left', 'right')):
+            return (f'Số {left_name} xung quanh {clue["left"]["cell"]} {relation} số '
+                    f'{right_name} xung quanh {clue["right"]["cell"]} (không tính ô trung tâm).')
+        return (f"Số {left_name} trong nhóm {' · '.join(left)} {relation} "
+                f"số {right_name} trong nhóm {' · '.join(right)}.")
     if kind == 'CONTIGUOUS':
-        role = 'Sói' if clue['status'] == CRIMINAL else 'Dân làng'
+        role = 'Sói' if checked_role(clue.get('status')) else 'Dân làng'
         return f'Các {role} trên hàng {clue["region"]["row"]} nằm liền nhau thành một đoạn.'
+    cells = ' · '.join(referenced_cells(clue, layout))
     if kind == 'FACT':
         return f'{cells} là ' + ('Đồng phạm.' if clue['status'] == CRIMINAL else 'Vô can.')
     if kind == 'SAME':
         return f'{cells}: hai người có cùng trạng thái.'
     if kind == 'DIFFERENT':
         return f'{cells}: một Đồng phạm và một Vô can.'
+    if kind == 'PARITY':
+        parity = 'lẻ' if checked_parity(clue) else 'chẵn'
+        return f'Số Đồng phạm trong nhóm {cells} là số {parity}.'
     prefix = {'EXACTLY':'Đúng', 'AT_LEAST':'Ít nhất', 'AT_MOST':'Nhiều nhất'}[kind]
     return f'{prefix} {clue["k"]} Đồng phạm trong nhóm: {cells}.'
 

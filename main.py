@@ -1,14 +1,16 @@
 """python main.py              -> web UI using the SAT agent
 python main.py --solve ID     -> solve one puzzle in the terminal and print the trace
-python main.py --check        -> uniqueness check of every puzzle"""
+python main.py --check        -> uniqueness check of every puzzle
+python main.py --cnf-stats    -> opening and complete clue-set CNF sizes"""
 import argparse
 
 from app import create_app
 from game.agent import SatAgent
+from game.encoder import build_kb
 from game.engine import GameEngine
 from game.logic import CRIMINAL, INNOCENT
 from game.puzzles import PUZZLES
-from game.stub_sat import build_kb, solve  # swap for the real encoder/dpll when ready
+from game.stub_sat import solve  # swap for the team's instrumented DPLL when ready
 
 
 def make_agent():
@@ -22,10 +24,21 @@ def initial_facts(puzzle):
             for cell in puzzle['initial']]
 
 
+def print_cnf_stats():
+    print('puzzle             state     primary  auxiliary  clauses')
+    for pid, puzzle in PUZZLES.items():
+        state = GameEngine(pid).knowledge()
+        for label, clues in [('opening', state['clues']), ('full', list(puzzle['clues'].values()))]:
+            kb = build_kb(state | {'clues': clues})
+            print(f'{pid:<18} {label:<9} {kb.n_primary:>7} {kb.n_aux:>10} {kb.n_clauses:>8}')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--solve', choices=PUZZLES)
-    parser.add_argument('--check', action='store_true')
+    commands = parser.add_mutually_exclusive_group()
+    commands.add_argument('--solve', choices=PUZZLES)
+    commands.add_argument('--check', action='store_true')
+    commands.add_argument('--cnf-stats', action='store_true')
     args = parser.parse_args()
 
     if args.solve:
@@ -39,6 +52,8 @@ def main():
         for pid, puzzle in PUZZLES.items():
             clues = list(puzzle['clues'].values()) + initial_facts(puzzle)
             print(pid, make_agent().unique_check(clues, puzzle['size']))
+    elif args.cnf_stats:
+        print_cnf_stats()
     else:
         create_app(agent_factory=make_agent).run(host='127.0.0.1', port=5000, debug=False)
 

@@ -1,19 +1,33 @@
 from copy import deepcopy
 from threading import RLock
 from .logic import (CRIMINAL, INNOCENT, UNKNOWN, ExhaustiveAgent,
-                    referenced_cells, proof_support, evaluate)
+                    checked_parity, checked_role, comparison, referenced_cells,
+                    proof_support, evaluate)
 from .puzzles import PUZZLES
 
 
 def clue_text(clue, layout):
-    cells = ' · '.join(referenced_cells(clue, layout))
     kind = clue['type']
+    if kind == 'COMPARE':
+        (left, left_role), (right, right_role), op = comparison(clue, layout)
+        relation = {'GT': 'nhiều hơn', 'EQ': 'bằng', 'LT': 'ít hơn'}[op]
+        left_name = 'Đồng phạm' if left_role else 'Vô can'
+        right_name = 'Đồng phạm' if right_role else 'Vô can'
+        return (f"Số {left_name} trong nhóm {' · '.join(left)} {relation} "
+                f"số {right_name} trong nhóm {' · '.join(right)}.")
+    cells = ' · '.join(referenced_cells(clue, layout))
     if kind == 'FACT':
         return f'{cells} là ' + ('Đồng phạm.' if clue['status'] == CRIMINAL else 'Vô can.')
     if kind == 'SAME':
         return f'{cells}: hai người có cùng trạng thái.'
     if kind == 'DIFFERENT':
         return f'{cells}: một Đồng phạm và một Vô can.'
+    if kind == 'PARITY':
+        parity = 'lẻ' if checked_parity(clue) else 'chẵn'
+        return f'Số Đồng phạm trong nhóm {cells} là số {parity}.'
+    if kind == 'CONTIGUOUS':
+        role = 'Đồng phạm' if checked_role(clue.get('status')) else 'Vô can'
+        return f'Nếu có {role} trong hàng {cells}, họ đứng liền nhau.'
     prefix = {'EXACTLY':'Đúng', 'AT_LEAST':'Ít nhất', 'AT_MOST':'Nhiều nhất'}[kind]
     return f'{prefix} {clue["k"]} Đồng phạm trong nhóm: {cells}.'
 

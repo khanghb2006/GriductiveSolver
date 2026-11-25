@@ -8,6 +8,7 @@ Mỗi người trên lưới là `CRIMINAL` (tội phạm) hoặc `INNOCENT` (v�
 
 - [docs/statement.md](docs/statement.md) – đề bài (file PDF `docs/AI - Project 2.pdf` là bản chính thức)
 - [docs/assignment.md](docs/assignment.md) – phân chia nhóm, giao diện module, tiến độ (tiếng Việt)
+- [Báo cáo PDF](docs/Report.pdf) · [Bản nguồn để cập nhật](docs/report.md)
 
 ## Chạy web
 
@@ -16,7 +17,7 @@ PowerShell, tại thư mục dự án:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python app.py
+.\.venv\Scripts\python main.py
 ```
 
 Mở **http://127.0.0.1:5000**. Nếu `.venv` đã cài, chỉ cần lệnh cuối. Ctrl+C để dừng. Khi sửa file Python/dữ liệu màn, cần khởi động lại server. Khi chỉ sửa UI, Ctrl+F5 là đủ.
@@ -39,7 +40,16 @@ Mọi clue đã mở đều đúng, kể cả Lời trăn trối của Sói. CRI
 
 ## Điểm nối cho thành viên thuật toán
 
-Hiện cả Verdict, Hint và Auto Solve **đều đã nối thật** tới implementation demo `ExhaustiveAgent` có sẵn. Không dùng đáp án bí mật để thay chứng minh. Không có fixture hoặc đáp án hard-code trong runtime. Phần còn chờ nhóm là adapter CNF/DPLL/thuật toán chính thức, không phải nút giao diện còn rỗng.
+`main.py` nối Verdict, Hint và Auto Solve tới `SatAgent` dùng encoder trong `game/encoder.py` và solver tạm trong `game/stub_sat.py`. Chạy `python app.py` để dùng chế độ demo `ExhaustiveAgent`.
+
+```powershell
+python main.py --solve village-3
+python main.py --check
+python main.py --cnf-stats
+python -m pytest -q
+```
+
+`--cnf-stats` in số biến chính, biến phụ và mệnh đề ở trạng thái mở đầu và trong bộ clue đầy đủ của mỗi puzzle. Cả hai phép đo đều tính các phán quyết mở đầu. `build_kb(public_state)` nhận schema của engine hoặc schema trong phân công. `encode_clue(clue, n)` dùng cho một clue riêng lẻ. Cả hai trả `KB(clauses, n_primary, n_aux)` với thuộc tính `n_clauses`.
 
 ### Interface phải giữ
 
@@ -258,7 +268,7 @@ Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server ki
 
 Cảnh nền gốc Gridwolf: `static/scenes/gridwolf-village-night.webp`, tạo bằng **built-in image_gen**, khoảng 206 KB. Hiển thị toàn cảnh ở Trang chủ, crop và phủ xanh đen trong gameplay. Người và sói trong tranh không liên hệ với cell/đáp án. Prompt cuối, chế độ tạo và xuất xứ được ghi nguyên văn trong [ASSET_NOTES.md](static/scenes/ASSET_NOTES.md). Không dùng screenshot, logo hoặc asset Agrou.
 
-Tham khảo cách đọc nhóm/ngân sách từ [Griductive Strategy](https://knotwise.games/games/griductive/strategy) và cách hiểu hàng/cột/ô kề từ [How to Play](https://knotwise.games/games/griductive/how-to-play). Các nhân vật, clue, lời giải và cảnh Gridwolf được soạn riêng. Chưa tích hợp thuật toán CNF/DPLL của nhóm; phần demo hiện tại dùng đúng adapter đã có, không tuyên bố hoàn thành các mục thuật toán của toàn Project 2.
+Tham khảo cách đọc nhóm/ngân sách và cách hiểu hàng/cột/ô kề. Các nhân vật, clue, lời giải và cảnh Gridwolf được soạn riêng. [Griductive Strategy](https://knotwise.games/games/griductive/strategy) · [How to Play](https://knotwise.games/games/griductive/how-to-play)
 
 Nhân vật được xếp theo thứ tự tên ABC của dữ liệu màn, từ trái sang phải rồi từ trên xuống dưới; không trộn tên khi tải hoặc chơi lại.
 

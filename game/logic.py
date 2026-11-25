@@ -1,4 +1,5 @@
 """Public-only semantic oracle. Replace ExhaustiveAgent with the team's SAT agent."""
+from collections.abc import Mapping
 from dataclasses import dataclass
 from math import prod
 from typing import Protocol
@@ -7,49 +8,132 @@ CRIMINAL, INNOCENT, UNKNOWN = 'CRIMINAL', 'INNOCENT', 'UNKNOWN'
 
 
 def region_cells(region, layout):
-    ids = [c['id'] for c in layout]
-    kind = region['kind']
-    if kind == 'LIST':
-        cells = region['cells']
-        if len(set(cells)) != len(cells) or not set(cells) <= set(ids):
-            raise ValueError('Invalid explicit region')
-        return list(cells)
+    if not isinstance(region, Mapping):
+        raise ValueError('A region must be a mapping')
+    kind = region.get('kind')
+    if kind in ('LIST', 'CELLS'):
+        return checked_cells(region.get('cells'), layout)
     if kind == 'ROW':
-        return [c['id'] for c in layout if c['row'] == region['row']]
-    if kind == 'COLUMN':
-        return [c['id'] for c in layout if c['column'] == region['column']]
-    if kind == 'NEIGHBORS':
-        center = next(c for c in layout if c['id'] == region['cell'])
-        return [c['id'] for c in layout if c != center and
-                max(abs(c['row']-center['row']), abs(c['column']-center['column'])) == 1]
-    raise ValueError('Unknown region')
+        row = region.get('row')
+        cells = [c['id'] for c in layout if type(row) is int and c['row'] == row]
+    elif kind in ('COLUMN', 'COL'):
+        column = region.get('column', region.get('col'))
+        if isinstance(column, str) and len(column) == 1 and 'A' <= column <= 'Z':
+            column = ord(column) - ord('A') + 1
+        cells = [c['id'] for c in layout if type(column) is int and c['column'] == column]
+    elif kind == 'NEIGHBORS':
+        center = next((c for c in layout if c['id'] == region.get('cell')), None)
+        if center is None:
+            raise ValueError('Invalid neighbor center')
+        return [c['id'] for c in layout if
+                max(abs(c['row'] - center['row']), abs(c['column'] - center['column'])) == 1]
+    else:
+        raise ValueError(f'Unknown region kind: {kind!r}')
+    if not cells:
+        raise ValueError(f'Invalid {kind} coordinate')
+    return cells
+
+
+def checked_cells(cells, layout, *, distinct=True):
+    ids = {c['id'] for c in layout}
+    if not isinstance(cells, (list, tuple)) or any(
+        not isinstance(cell, str) or cell not in ids for cell in cells
+    ):
+        raise ValueError('Invalid cell references')
+    if distinct and len(set(cells)) != len(cells):
+        raise ValueError('Duplicate cells in explicit region')
+    return list(cells)
+
+
+def checked_role(status):
+    if status not in (CRIMINAL, INNOCENT):
+        raise ValueError(f'Invalid status: {status!r}')
+    return status == CRIMINAL
+
+
+def comparison(clue, layout):
+    """Resolve both count operands and the comparison operator."""
+    sides = []
+    default_op = 'EQ'
+    for key in ('left', 'right'):
+        side = clue.get(key)
+        if not isinstance(side, Mapping):
+            raise ValueError(f'Invalid comparison operand: {key}')
+        # The web branch explicitly supplies a center and the role to count.
+        if 'kind' in side:
+            sides.append((region_cells(side, layout), True))
+            default_op = None
+        else:
+            region = dict(kind='NEIGHBORS', cell=side.get('cell'))
+            sides.append((region_cells(region, layout), checked_role(side.get('status'))))
+    op = clue.get('op', default_op)
+    if op not in ('GT', 'EQ', 'LT'):
+        raise ValueError(f'Invalid comparison operator: {op!r}')
+    return sides[0], sides[1], op
 
 
 def referenced_cells(clue, layout):
-    return region_cells(clue['region'], layout) if 'region' in clue else list(clue['cells'])
+    kind = clue.get('type')
+    if kind == 'COMPARE':
+        left, right, _ = comparison(clue, layout)
+        return list(dict.fromkeys(left[0] + right[0]))
+    if kind in ('FACT', 'SAME', 'DIFFERENT'):
+        cells = [clue['cell']] if kind == 'FACT' and 'cell' in clue else clue.get('cells')
+        cells = checked_cells(cells, layout, distinct=False)
+        expected = 1 if kind == 'FACT' else 2
+        if len(cells) != expected:
+            raise ValueError(f'{kind} requires {expected} cell(s)')
+        return cells
+    if kind == 'CONTIGUOUS':
+        region = clue.get('region')
+        if not isinstance(region, Mapping) or region.get('kind') != 'ROW':
+            raise ValueError('CONTIGUOUS requires a row')
+        return region_cells(region, sorted(layout, key=lambda cell: cell['column']))
+    return (region_cells(clue['region'], layout) if 'region' in clue
+            else checked_cells(clue.get('cells'), layout))
+
+
+def checked_count(clue, region_size):
+    k = clue.get('k')
+    if type(k) is not int or not 0 <= k <= region_size:
+        raise ValueError('Invalid count')
+    return k
+
+
+def checked_parity(clue):
+    parity = clue.get('parity')
+    if parity not in ('EVEN', 'ODD'):
+        raise ValueError(f'Invalid parity: {parity!r}')
+    return parity == 'ODD'
 
 
 def evaluate(clue, assignment, layout):
+    kind = clue.get('type')
+    if kind == 'COMPARE':
+        (left, left_role), (right, right_role), op = comparison(clue, layout)
+        a = sum(assignment[c] == left_role for c in left)
+        b = sum(assignment[c] == right_role for c in right)
+        return {'GT': a > b, 'EQ': a == b, 'LT': a < b}[op]
+
     cells = referenced_cells(clue, layout)
     values = [assignment[c] for c in cells]
-    kind = clue['type']
     if kind == 'FACT':
-        return values[0] == (clue['status'] == CRIMINAL)
+        return values[0] == checked_role(clue.get('status'))
     if kind == 'SAME':
         return values[0] == values[1]
     if kind == 'DIFFERENT':
         return values[0] != values[1]
-    k = clue['k']
-    if type(k) is not int or not 0 <= k <= len(cells):
-        raise ValueError('Invalid count')
+    if kind == 'CONTIGUOUS':
+        role = checked_role(clue.get('status'))
+        positions = [i for i, value in enumerate(values) if value == role]
+        return not positions or positions[-1] - positions[0] + 1 == len(positions)
     count = sum(values)
-    if kind == 'EXACTLY':
-        return count == k
-    if kind == 'AT_LEAST':
-        return count >= k
-    if kind == 'AT_MOST':
-        return count <= k
-    raise ValueError('Unknown clue type')
+    if kind == 'PARITY':
+        return count % 2 == checked_parity(clue)
+    if kind not in ('EXACTLY', 'AT_LEAST', 'AT_MOST'):
+        raise ValueError(f'Unknown clue type: {kind!r}')
+    k = checked_count(clue, len(cells))
+    return {'EXACTLY': count == k, 'AT_LEAST': count >= k, 'AT_MOST': count <= k}[kind]
 
 
 @dataclass

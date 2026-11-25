@@ -95,7 +95,7 @@ def test_unknown_auto_stops():
 def test_semantics_exhaustive(kind):
     layout = PUZZLES['village-3']['layout']
     cells = ['A1','B1']
-    clue = dict(type=kind,cells=cells,status=CRIMINAL,k=1)
+    clue = dict(type=kind,cells=cells[:1] if kind == 'FACT' else cells,status=CRIMINAL,k=1)
     for a,b in product((False,True),repeat=2):
         expected = {'FACT':a,'SAME':a==b,'DIFFERENT':a!=b,
                     'EXACTLY':a+b==1,'AT_LEAST':a+b>=1,'AT_MOST':a+b<=1}[kind]

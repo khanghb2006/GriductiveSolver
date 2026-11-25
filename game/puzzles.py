@@ -239,4 +239,6 @@ DEMO_PROOFS={
     'village-4':dict(prefix=[],target='D1',status=INNOCENT,clue_ids=['clue-A1','clue-A2']),
     'village-5':dict(prefix=[('B1',INNOCENT),('B2',INNOCENT)],target='C3',status=INNOCENT,clue_ids=['clue-A2','clue-B1']),
     'village-5-mist':dict(prefix=[('A2',INNOCENT)],target='C3',status=INNOCENT,clue_ids=['clue-E1','clue-A2']),
+    'village-3-links':dict(prefix=[],target='B2',status=CRIMINAL,clue_ids=['clue-A1','clue-A2']),
+    'village-4-links':dict(prefix=[],target='C3',status=INNOCENT,clue_ids=['clue-A1','clue-A2']),
 }

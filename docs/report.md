@@ -113,7 +113,7 @@ python -m pytest -q
 
 ## 5. Kết quả tích hợp sơ bộ
 
-Quy mô CNF được ghi ở thời điểm mở đầu và khi dùng toàn bộ clue của puzzle. Cả hai phép đo đều tính các phán quyết mở đầu. Số biến phụ bằng 0 vì bốn puzzle trên nhánh tích hợp chỉ dùng các clue cốt lõi. Các clue mở rộng có test riêng.
+Quy mô CNF được ghi ở thời điểm mở đầu và khi dùng toàn bộ clue của puzzle. Cả hai phép đo đều tính các phán quyết mở đầu. Hai puzzle có hậu tố `-links` dùng COMPARE ngay từ đầu và cần biến phụ.
 
 | Puzzle | Biến chính | Biến phụ | Mệnh đề mở đầu | Mệnh đề toàn bộ | Nghiệm |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -121,13 +121,17 @@ Quy mô CNF được ghi ở thời điểm mở đầu và khi dùng toàn bộ
 | village-4 | 16 | 0 | 10 | 185 | Duy nhất |
 | village-5 | 25 | 0 | 6 | 304 | Duy nhất |
 | village-5-mist | 25 | 0 | 7 | 218 | Duy nhất |
+| village-3-links | 9 | 19 | 75 | 121 | Duy nhất |
+| village-4-links | 16 | 40 | 159 | 519 | Duy nhất |
 
 | Puzzle | Kết quả tự giải | Lượt lật | Lần gọi SAT | Thời gian (s) |
 | --- | --- | ---: | ---: | ---: |
-| village-3 | COMPLETE | 7 | 385 | 0,016 |
-| village-4 | COMPLETE | 14 | 1.897 | 0,178 |
-| village-5 | COMPLETE | 23 | 6.601 | 2,106 |
-| village-5-mist | COMPLETE | 23 | 6.601 | 1,811 |
+| village-3 | COMPLETE | 7 | 385 | 0,015 |
+| village-4 | COMPLETE | 14 | 1.897 | 0,175 |
+| village-5 | COMPLETE | 23 | 6.601 | 2,111 |
+| village-5-mist | COMPLETE | 23 | 6.601 | 1,835 |
+| village-3-links | COMPLETE | 7 | 385 | 0,112 |
+| village-4-links | COMPLETE | 14 | 1.897 | 2,200 |
 
 Kết quả tự giải dùng encoder và solver tạm trong `game/stub_sat.py`. Số lần gọi SAT được đếm qua một hàm bọc quanh solver, bao gồm phân loại, tìm clue hỗ trợ và kiểm lại verdict trong Game Engine. Thời gian là một lượt `auto_solve` đo bằng `perf_counter` trên Windows với Python 3.13.2, sau khi tạo engine. Các test của agent kiểm tra riêng hai tình huống mơ hồ và mâu thuẫn.
 
@@ -139,7 +143,7 @@ python main.py --solve village-3
 
 ### Dữ liệu chờ bổ sung cho bản nộp
 
-Các phép đo chính thức của Phát sẽ dùng cùng một bộ puzzle với mọi cấu hình, ghi số quyết định, lần lan truyền, lần quay lui, runtime và mọi ca lỗi hoặc hết thời gian. Bộ hiện tại có một puzzle 3×3, một puzzle 4×4 và hai puzzle 5×5. Bảng thực nghiệm theo phân công cần thêm các puzzle 3×3 và 4×4.
+Các phép đo chính thức của Phát sẽ dùng cùng một bộ puzzle với mọi cấu hình, ghi số quyết định, lần lan truyền, lần quay lui, runtime và mọi ca lỗi hoặc hết thời gian. Bộ hiện tại có hai puzzle cho mỗi kích thước 3×3, 4×4 và 5×5. Bảng thực nghiệm theo phân công cần thêm một puzzle 3×3 và một puzzle 4×4.
 
 <!-- pagebreak -->
 

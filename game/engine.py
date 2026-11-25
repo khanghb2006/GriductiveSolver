@@ -11,10 +11,16 @@ def clue_text(clue, layout):
     if kind == 'COMPARE':
         (left, left_role), (right, right_role), op = comparison(clue, layout)
         relation = {'GT': 'nhiều hơn', 'EQ': 'bằng', 'LT': 'ít hơn'}[op]
-        left_name = 'Đồng phạm' if left_role else 'Vô can'
-        right_name = 'Đồng phạm' if right_role else 'Vô can'
+        left_name = 'Sói' if left_role else 'Dân làng'
+        right_name = 'Sói' if right_role else 'Dân làng'
+        if all('kind' not in clue[side] for side in ('left', 'right')):
+            return (f'Số {left_name} xung quanh {clue["left"]["cell"]} {relation} số '
+                    f'{right_name} xung quanh {clue["right"]["cell"]} (không tính ô trung tâm).')
         return (f"Số {left_name} trong nhóm {' · '.join(left)} {relation} "
                 f"số {right_name} trong nhóm {' · '.join(right)}.")
+    if kind == 'CONTIGUOUS':
+        role = 'Sói' if checked_role(clue.get('status')) else 'Dân làng'
+        return f'Các {role} trên hàng {clue["region"]["row"]} nằm liền nhau thành một đoạn.'
     cells = ' · '.join(referenced_cells(clue, layout))
     if kind == 'FACT':
         return f'{cells} là ' + ('Đồng phạm.' if clue['status'] == CRIMINAL else 'Vô can.')
@@ -25,9 +31,6 @@ def clue_text(clue, layout):
     if kind == 'PARITY':
         parity = 'lẻ' if checked_parity(clue) else 'chẵn'
         return f'Số Đồng phạm trong nhóm {cells} là số {parity}.'
-    if kind == 'CONTIGUOUS':
-        role = 'Đồng phạm' if checked_role(clue.get('status')) else 'Vô can'
-        return f'Nếu có {role} trong hàng {cells}, họ đứng liền nhau.'
     prefix = {'EXACTLY':'Đúng', 'AT_LEAST':'Ít nhất', 'AT_MOST':'Nhiều nhất'}[kind]
     return f'{prefix} {clue["k"]} Đồng phạm trong nhóm: {cells}.'
 

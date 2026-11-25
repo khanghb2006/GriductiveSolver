@@ -4,7 +4,7 @@ import pytest
 
 from game.encoder import build_kb, encode_clue, variable_map
 from game.engine import GameEngine
-from game.logic import CRIMINAL, INNOCENT, evaluate
+from game.logic import CRIMINAL, INNOCENT, UNKNOWN, ExhaustiveAgent, evaluate
 from game.stub_sat import solve
 from main import make_agent
 
@@ -116,3 +116,23 @@ def test_compare_handles_full_board_without_enumerating_assignments():
     all_innocent = [-var for var in range(1, 26)]
     assert not solve(kb.clauses, kb.n_primary + kb.n_aux, all_innocent).sat
     assert solve(kb.clauses, kb.n_primary + kb.n_aux, [1, *all_innocent[1:]]).sat
+
+
+@pytest.mark.parametrize(('op', 'a1', 'c1'), [
+    ('GT', CRIMINAL, INNOCENT),
+    ('LT', INNOCENT, CRIMINAL),
+    ('EQ', UNKNOWN, UNKNOWN),
+])
+def test_sat_and_demo_agree_on_public_extension_deductions(op, a1, c1):
+    left = dict(kind='LIST', cells=['A1', 'B1'])
+    right = dict(kind='LIST', cells=['B1', 'C1'])
+    clues = [
+        dict(type='COMPARE', left=left, op=op, right=right),
+        dict(type='PARITY', region=dict(kind='LIST', cells=['A2', 'B2']), parity='ODD'),
+    ]
+    state = dict(layout=LAYOUT, known={'A2': CRIMINAL}, clues=clues)
+    expected = make_agent().classify(state).statuses
+    assert (expected['A1'], expected['B1'], expected['C1'], expected['B2']) == (
+        a1, UNKNOWN, c1, INNOCENT
+    )
+    assert ExhaustiveAgent().classify(state).statuses == expected

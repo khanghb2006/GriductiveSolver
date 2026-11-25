@@ -162,21 +162,57 @@ class ExhaustiveAgent:
         for clue in public_state['clues']:
             cells = tuple(referenced_cells(clue, layout))
             kind = clue['type']
-            value = clue.get('k') if 'region' in clue or kind in ('EXACTLY','AT_LEAST','AT_MOST') else clue.get('status')
-            if kind in ('EXACTLY','AT_LEAST','AT_MOST'):
-                if type(value) is not int or not 0 <= value <= len(cells):
-                    raise ValueError('Invalid count')
-            elif kind not in ('FACT','SAME','DIFFERENT'):
+            value = None
+            if kind == 'COMPARE':
+                left, right, op = comparison(clue, layout)
+                # Combine coefficients for each cell shared by the two counts.
+                coefficients, constant = {}, 0
+                for sign, (side_cells, role) in zip((1, -1), (left, right)):
+                    for cell in side_cells:
+                        coefficients[cell] = coefficients.get(cell, 0) + sign * (1 if role else -1)
+                        if not role:
+                            constant += sign
+                value = ({c: k for c, k in coefficients.items() if k}, -constant, op)
+            elif kind == 'CONTIGUOUS':
+                target = checked_role(clue.get('status'))
+                # Empty, singleton and every longer interval are valid blocks.
+                value = {tuple(not target for _ in cells)}
+                for start in range(len(cells)):
+                    for end in range(start + 1, len(cells) + 1):
+                        value.add(tuple(target if start <= i < end else not target for i in range(len(cells))))
+            elif kind in ('EXACTLY','AT_LEAST','AT_MOST'):
+                value = checked_count(clue, len(cells))
+            elif kind == 'PARITY':
+                value = checked_parity(clue)
+            elif kind == 'FACT':
+                value = checked_role(clue.get('status'))
+            elif kind not in ('SAME', 'DIFFERENT'):
                 raise ValueError('Unknown clue type')
             constraints.append((kind, cells, value))
 
         def bounds(constraint, assignment):
             """Return (still possible, already true for every extension)."""
             kind, cells, value = constraint
+            if kind == 'COMPARE':
+                coefficients, target, op = value
+                known = sum(k * assignment[c] for c,k in coefficients.items() if c in assignment)
+                pending = [k for c,k in coefficients.items() if c not in assignment]
+                lower = known + sum(min(0,k) for k in pending)
+                upper = known + sum(max(0,k) for k in pending)
+                if op == 'GT':
+                    return upper > target, lower > target
+                if op == 'LT':
+                    return lower < target, upper < target
+                return lower <= target <= upper, lower == upper == target
+            if kind == 'CONTIGUOUS':
+                compatible = sum(all(c not in assignment or assignment[c] == bit
+                                     for c,bit in zip(cells, pattern)) for pattern in value)
+                free = sum(c not in assignment for c in cells)
+                return compatible > 0, compatible == 1 << free
             if kind == 'FACT':
                 if cells[0] not in assignment:
                     return True, False
-                valid = assignment[cells[0]] == (value == CRIMINAL)
+                valid = assignment[cells[0]] == value
                 return valid, valid
             if kind in ('SAME', 'DIFFERENT'):
                 if cells[0] == cells[1]:
@@ -187,6 +223,11 @@ class ExhaustiveAgent:
                 return valid, valid
             lower = sum(assignment.get(c, False) for c in cells)
             upper = lower + sum(c not in assignment for c in cells)
+            if kind == 'PARITY':
+                if lower != upper:
+                    return True, False
+                valid = lower % 2 == value
+                return valid, valid
             if kind == 'EXACTLY':
                 return lower <= value <= upper, lower == upper == value
             if kind == 'AT_LEAST':

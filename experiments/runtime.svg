@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="570" viewBox="0 0 1000 570">
+<rect width="100%" height="100%" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#172033}.title{font-size:20px;font-weight:700}.label{font-size:12px}.value{font-size:11px}</style>
+<text class="title" x="20" y="30">Griductive DPLL runtime by puzzle</text>
+<text class="label" x="20" y="63">village-3 · dpll</text>
+<rect x="270" y="50" width="4" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="280" y="62">3.798 ms</text>
+<text class="label" x="20" y="88">village-4 · dpll</text>
+<rect x="270" y="75" width="18" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="294" y="87">17.359 ms</text>
+<text class="label" x="20" y="113">village-5 · dpll</text>
+<rect x="270" y="100" width="225" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="501" y="112">221.490 ms</text>
+<text class="label" x="20" y="138">village-5-mist · dpll</text>
+<rect x="270" y="125" width="190" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="466" y="137">187.484 ms</text>
+<text class="label" x="20" y="163">village-3-links · dpll</text>
+<rect x="270" y="150" width="19" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="295" y="162">18.329 ms</text>
+<text class="label" x="20" y="188">village-4-links · dpll</text>
+<rect x="270" y="175" width="548" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="824" y="187">540.917 ms</text>
+<text class="label" x="20" y="213">benchmark-3-river · dpll</text>
+<rect x="270" y="200" width="3" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="279" y="212">2.764 ms</text>
+<text class="label" x="20" y="238">benchmark-3-market · dpll</text>
+<rect x="270" y="225" width="5" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="281" y="237">4.448 ms</text>
+<text class="label" x="20" y="263">benchmark-4-tower · dpll</text>
+<rect x="270" y="250" width="16" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="292" y="262">15.775 ms</text>
+<text class="label" x="20" y="288">benchmark-4-bridge · dpll</text>
+<rect x="270" y="275" width="14" height="16" rx="3" fill="#2563eb"/>
+<text class="value" x="290" y="287">13.958 ms</text>
+<text class="label" x="20" y="313">village-3 · dpll+pure</text>
+<rect x="270" y="300" width="7" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="283" y="312">6.605 ms</text>
+<text class="label" x="20" y="338">village-4 · dpll+pure</text>
+<rect x="270" y="325" width="26" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="302" y="337">25.427 ms</text>
+<text class="label" x="20" y="363">village-5 · dpll+pure</text>
+<rect x="270" y="350" width="337" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="613" y="362">331.894 ms</text>
+<text class="label" x="20" y="388">village-5-mist · dpll+pure</text>
+<rect x="270" y="375" width="394" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="670" y="387">388.198 ms</text>
+<text class="label" x="20" y="413">village-3-links · dpll+pure</text>
+<rect x="270" y="400" width="32" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="308" y="412">31.691 ms</text>
+<text class="label" x="20" y="438">village-4-links · dpll+pure</text>
+<rect x="270" y="425" width="640" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="916" y="437">631.179 ms</text>
+<text class="label" x="20" y="463">benchmark-3-river · dpll+pure</text>
+<rect x="270" y="450" width="5" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="281" y="462">4.650 ms</text>
+<text class="label" x="20" y="488">benchmark-3-market · dpll+pure</text>
+<rect x="270" y="475" width="7" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="283" y="487">6.910 ms</text>
+<text class="label" x="20" y="513">benchmark-4-tower · dpll+pure</text>
+<rect x="270" y="500" width="21" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="297" y="512">20.954 ms</text>
+<text class="label" x="20" y="538">benchmark-4-bridge · dpll+pure</text>
+<rect x="270" y="525" width="36" height="16" rx="3" fill="#ea580c"/>
+<text class="value" x="312" y="537">35.296 ms</text>
+</svg>

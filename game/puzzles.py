@@ -230,8 +230,42 @@ def quiet_street_puzzle():
     },['A1','A2'])
 
 
+def forest_echo_puzzle():
+    # Both opening extensions are needed for C3; later clues reuse both types.
+    return case('village-5-links','Tiếng vọng trong rừng',5,RED_NAMES,JOBS[2:]+JOBS[:2],
+        [True,True,False,False,True, True,True,True,True,False,
+         True,False,False,False,True, False,True,True,False,False,
+         True,False,True,True,False],{
+        'A1':compare('A1',CRIMINAL,'C2',CRIMINAL),
+        'A2':contiguous(3,INNOCENT),
+        'C3':compare('C2',CRIMINAL,'C3',INNOCENT),
+        'B2':contiguous(4,CRIMINAL),
+        'C4':count('EXACTLY',1,neighbors('E3')),
+        'E4':count('EXACTLY',5,neighbors('B2')),
+        'E2':count('EXACTLY',3,row(1)),
+        'B1':count('EXACTLY',2,row(4)),
+        'C1':count('EXACTLY',1,neighbors('E5')),
+        'D1':count('EXACTLY',4,neighbors('A2')),
+        'E1':count('EXACTLY',3,neighbors('A3')),
+        'C2':count('EXACTLY',4,row(2)),
+        'D2':count('EXACTLY',5,neighbors('C3')),
+        'A3':count('EXACTLY',4,neighbors('C1')),
+        'B3':count('EXACTLY',3,neighbors('C2')),
+        'D3':count('EXACTLY',3,neighbors('C5')),
+        'A4':count('EXACTLY',4,neighbors('B5')),
+        'B4':count('EXACTLY',3,neighbors('D1')),
+        'D4':count('EXACTLY',2,column('E')),
+        'A5':count('EXACTLY',3,column('B')),
+        'B5':count('EXACTLY',2,row(3)),
+        'E3':count('EXACTLY',3,neighbors('A4')),
+        'C5':count('EXACTLY',4,neighbors('B4')),
+        'D5':count('EXACTLY',6,neighbors('B3')),
+        'E5':count('EXACTLY',3,neighbors('E2')),
+    },['A1','A2'])
+
+
 PUZZLES={p['id']:p for p in (tutorial(),north_gate(),red_moon_puzzle(),mist_wharf_puzzle(),
-                            lakeside_puzzle(),quiet_street_puzzle())}
+                            lakeside_puzzle(),quiet_street_puzzle(),forest_echo_puzzle())}
 
 # Server-only walkthrough checkpoints, also used to verify clue dependency in tests.
 DEMO_PROOFS={
@@ -241,4 +275,5 @@ DEMO_PROOFS={
     'village-5-mist':dict(prefix=[('A2',INNOCENT)],target='C3',status=INNOCENT,clue_ids=['clue-E1','clue-A2']),
     'village-3-links':dict(prefix=[],target='B2',status=CRIMINAL,clue_ids=['clue-A1','clue-A2']),
     'village-4-links':dict(prefix=[],target='C3',status=INNOCENT,clue_ids=['clue-A1','clue-A2']),
+    'village-5-links':dict(prefix=[],target='C3',status=INNOCENT,clue_ids=['clue-A1','clue-A2']),
 }

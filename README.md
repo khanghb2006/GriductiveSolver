@@ -28,7 +28,7 @@ Mở **http://127.0.0.1:5000**. Nếu `.venv` đã cài, chỉ cần lệnh cu�
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `app.py`                                                 | Flask/API, phiên chơi, `create_app(agent_factory=...)` để đăng ký implementation của nhóm.                                                                                           |
 | `game/engine.py`                                         | `GameEngine`: puzzle đầy đủ, vai bí mật, clue úp; Load, Restart, kiểm verdict và lật thẻ.                                                                                            |
-| `game/puzzles.py`                                        | Sáu hồ sơ soạn tay, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough.                                                          |
+| `game/puzzles.py`                                        | Bảy hồ sơ hợp lệ, tên/nghề, nhãn, một clue cho mỗi người, thẻ mở sẵn; `DEMO_PROOFS` chỉ dùng để kiểm dữ liệu/walkthrough.                                                          |
 | `game/logic.py`                                          | Interface `LogicAgent`, `Inference`, semantic evaluator và implementation demo **đã có trước** `ExhaustiveAgent`. Được giữ và dùng lại, không viết lại thuật toán trong đợt 4.1 này. |
 | `static/views.html`, `static/app.js`, `static/style.css` | Routing hash, render, tương tác, spotlight và responsive. Không chứa đáp án hay clue úp.                                                                                             |
 | `static/scenes/gridwolf-village-night.webp`              | Cảnh Gridwolf riêng, không lấy asset/nhân vật/logo của Agrou.                                                                                                                        |
@@ -220,11 +220,40 @@ Các kết quả nghiệp vụ trả HTTP 200 với code. JSON/type sai hoặc I
 
 ## Dữ liệu màn và cách thêm hồ sơ
 
+### Màn 5×5: Tiếng vọng trong rừng
+
+ID `village-5-links`, có thể chọn tại nhóm 5×5 bằng nút “Hồ sơ khác”. Màn có 25 nhân vật theo thứ tự tên ABC, hai thẻ mở sẵn A1/A2 và đúng một nghiệm khi tính cả clue lẫn trạng thái mở sẵn. Có hai COMPARE, hai CONTIGUOUS và 21 EXACTLY trên hàng/cột/ô kề. Bước đầu cần phối hợp COMPARE với CONTIGUOUS; bỏ riêng một clue mở đầu thì chưa chứng minh được C3. Tên/nghề, cách hiển thị và schema vẫn dùng chung với các màn cũ.
+
+```bash
+python main.py --solve village-5-links
+```
+
+### Hai màn 4×4 dùng để kiểm thử trạng thái kết thúc
+
+Hai ca dưới đây chỉ được khai báo trong `tests/test_puzzles.py`, không nằm trong danh sách màn chơi hoặc CLI:
+
+| Tên | ID | Nghiệm khi tính cả clue và trạng thái mở sẵn | Hành vi mong đợi |
+| --- | --- | --- | --- |
+| Kiểm thử: Mơ hồ | `test-4-ambiguous` | Đúng 2 nghiệm | Mở thêm 12 thẻ rồi dừng `STUCK`; C4 và D4 đều `UNKNOWN`, không chấp nhận đoán |
+| Kiểm thử: Mâu thuẫn | `test-4-inconsistent` | 0 nghiệm | Hai clue mở đầu đếm hàng 2 lần lượt đúng 2 và đúng 1 Sói; dừng ngay, không mở thêm thẻ |
+
+Màn mơ hồ vẫn có hai nghiệm ngay cả khi xét toàn bộ clue ẩn. Trường `solution` của màn này chỉ lưu một nghiệm đại diện để kiểm tra những verdict thật sự được chứng minh; Agent không đọc trường đó. Màn mâu thuẫn là dữ liệu sai có chủ đích, không phải puzzle hợp lệ, nên không thể có đáp án làm mọi clue đúng.
+
+`game/puzzles.py` chỉ chứa bảy màn hợp lệ. Khi kiểm thử, fixture tạm đăng ký hai ca vào catalog bằng `monkeypatch`, rồi tự khôi phục khi test kết thúc. GUI/API thực tế không liệt kê chúng và từ chối yêu cầu Load trực tiếp theo ID. Không bỏ kiểm tra tính đúng của các màn thường.
+
+```bash
+python -m pytest tests/test_puzzles.py -q -k diagnostic
+```
+
+Test duyệt độc lập toàn bộ 16.384 phép gán cho 14 ô úp, kiểm tra đúng số nghiệm, đối chiếu Agent demo với SatAgent và kiểm tra dừng, từ chối đoán, không lộ clue ẩn, Restart. `python main.py --check` chỉ kiểm tra bảy màn hợp lệ, đều phải là `UNIQUE`.
+
+### Màn hợp lệ
+
 Một puzzle giữ các trường hiện có: `id`, `title`, `size`, `layout`, `solution`, `clues`, `initial`. `layout` theo thứ tự hàng rồi cột; tọa độ A–E là cột, 1–5 là hàng. `solution` ánh xạ ID sang bool. `clues` ánh xạ chủ thẻ sang một clue; thêm `id="clue-<owner>"` và `owner`. `initial` chứa ID những thẻ mở đầu.
 
-Chỉ dùng sáu template đã hỗ trợ: FACT, SAME, DIFFERENT, EXACTLY, AT_LEAST, AT_MOST. Vùng: LIST, ROW, COLUMN (A=1), NEIGHBORS (có đường chéo, không có tâm). Các helper trong `game/puzzles.py` chỉ tạo dict theo schema, không thêm loại logic. `referenced_cells()` và evaluator dùng chung giải vùng; frontend lấy trực tiếp `cells` từ DTO công khai, không regex từ lời văn.
+Hỗ trợ sáu clue cốt lõi FACT, SAME, DIFFERENT, EXACTLY, AT_LEAST, AT_MOST cùng PARITY, COMPARE và CONTIGUOUS. Vùng: LIST, ROW, COLUMN (A=1), NEIGHBORS (có đường chéo, không có tâm). COMPARE nhận hai vùng hoặc hai tâm kề với vai được đếm; CONTIGUOUS áp dụng trên hàng. Các helper trong `game/puzzles.py` tạo dữ liệu theo schema. `referenced_cells()` và evaluator dùng chung giải vùng; frontend lấy trực tiếp `cells` từ DTO công khai, không regex từ lời văn.
 
-Để thêm màn: tạo một hàm dữ liệu với đủ `size²` nhân vật/clue; đưa kết quả vào `PUZZLES`; thêm checkpoint vào `DEMO_PROOFS` nếu có bước ghép dự kiến; chạy test. Chọn màn tự lấy danh sách từ API. Ba thẻ kích thước 3×3, 4×4, 5×5; thẻ 5×5 giữ cả hai hồ sơ hiện có. Không có generator hoặc nút Ván mới giả.
+Để thêm màn: tạo một hàm dữ liệu với đủ `size²` nhân vật/clue; đưa kết quả vào `PUZZLES`; thêm checkpoint vào `DEMO_PROOFS` nếu có bước ghép dự kiến; chạy test. Chọn màn tự lấy danh sách từ API, hiện có 2 màn 3×3, 2 màn 4×4 và 3 màn 5×5. Dùng nút “Hồ sơ khác” để đổi hồ sơ trong cùng nhóm kích thước. Không sinh puzzle ngẫu nhiên khi chơi.
 
 ### Walkthrough (server/local docs, không phục vụ vào gameplay)
 
@@ -248,7 +277,7 @@ Các checkpoint được kiểm ở đúng public state bởi `tests/test_author
 .\.venv\Scripts\python tests\browser_fit.py
 ```
 
-Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server kiểm thử riêng. Test dữ liệu/backend hiện có 29 bài. Browser demo kiểm bốn hồ sơ, điểm chứng minh thủ công, hai từ chối, Hint, Auto Solve từng bước, Load/Restart, giữ phiên, spotlight bật/tắt, Sổ tối và kiểm response không chứa vai/clue úp. Browser fit kiểm 1366×768 và 1440×900 ở zoom 100%, không có cuộn dọc bên trong bàn, hàng cuối phán được và popover đổi hướng; Sổ cuộn riêng; mobile/cửa sổ thấp cuộn tự nhiên.
+Hai script Chrome hỗ trợ `--url http://127.0.0.1:5001` để dùng server kiểm thử riêng. Bộ test backend hiện có 130 ca, gồm encoder, agent, dữ liệu màn và hai ca mơ hồ/mâu thuẫn. Browser demo duyệt các hồ sơ trong `DEMO_PROOFS`, kiểm chứng minh thủ công, hai từ chối, Hint, Auto Solve từng bước, Load/Restart, giữ phiên, spotlight bật/tắt, Sổ tối và response không chứa vai/clue úp. Browser fit kiểm 1366×768 và 1440×900 ở zoom 100%, không có cuộn dọc bên trong bàn, hàng cuối phán được và popover đổi hướng; Sổ cuộn riêng; mobile/cửa sổ thấp cuộn tự nhiên.
 
 Ảnh kiểm chứng local ở `tmp/qa/` (gitignore). Mobile là Chrome mô phỏng viewport, chưa kiểm thiết bị thật/Safari/Firefox/production. Test/API không phải chứng nhận bảo mật toàn diện. Không có thí nghiệm hay báo cáo cho mục 4.5/4.6 trong gói 4.1 này.
 
